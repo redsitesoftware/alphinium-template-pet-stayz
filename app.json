@@ -1,0 +1,35 @@
+{
+  "expo": {
+    "name": "Pet Stayz",
+    "slug": "pet-stayz",
+    "version": "1.0.0",
+    "backgroundColor": "#FFF8F0",
+    "primaryColor": "#EA580C",
+    "platforms": [
+      "ios",
+      "android",
+      "web"
+    ],
+    "web": {
+      "bundler": "metro",
+      "output": "single",
+      "name": "Pet Stayz",
+      "description": "Airbnb for pet boarding and sitting",
+      "themeColor": "#6366F1",
+      "lang": "en"
+    },
+    "android": {
+      "package": "com.redsitesoftware.petStayz"
+    },
+    "ios": {
+      "bundleIdentifier": "com.redsitesoftware.petStayz"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "5c4b22e6-605e-4af4-ba7b-5eca8f8b14e8"
+      }
+    },
+    "owner": "zx10r06",
+    "description": "Airbnb for pet boarding and sitting"
+  }
+}
