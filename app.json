@@ -3,6 +3,7 @@
     "name": "Pet Stayz",
     "slug": "pet-stayz",
     "version": "1.0.0",
+    "scheme": "petstayz",
     "backgroundColor": "#FFF8F0",
     "primaryColor": "#EA580C",
     "platforms": [

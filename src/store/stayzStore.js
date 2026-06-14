@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useMemo, useReducer } from 'react';
+import React, { createContext, useCallback, useContext, useMemo, useReducer } from 'react';
 
 const HOSTS = [
  {
@@ -206,7 +206,7 @@ const HOSTS = [
 ];
 
 const initialState = {
- phase: 'home',
+ phase: 'login',
  selectedHost: null,
  hosts: HOSTS,
  filters: { type: 'All', petType: 'All', priceMax: 'Any', sortBy: 'Distance', size: 'Any', savedOnly: false },
@@ -330,6 +330,15 @@ function reducer(state, action) {
  return { ...state, bookingStep: Math.max(state.bookingStep - 1, 0) };
  case 'RESET_BOOKING':
  return { ...state, bookingStep: 0, bookingData: initialState.bookingData, phase: 'home', selectedHost: null };
+ case 'LOGOUT':
+ return {
+ ...state,
+ phase: 'login',
+ selectedHost: null,
+ bookingStep: 0,
+ chatOpen: false,
+ chatInput: '',
+ };
  case 'TOGGLE_CHAT':
  return { ...state, chatOpen: !state.chatOpen };
  case 'SET_CHAT_INPUT':
@@ -358,13 +367,14 @@ function reducer(state, action) {
 
 export function StayzProvider({ children }) {
  const [state, dispatch] = useReducer(reducer, initialState);
+ const logout = useCallback(() => dispatch({ type: 'LOGOUT' }), [dispatch]);
 
  const value = useMemo(() => {
  const filteredHosts = getFilteredHosts(state);
  const savedCount = state.hosts.filter((host) => host.saved).length;
  const featuredHosts = state.hosts.filter((host) => host.badge === 'Superhost');
- return { state, dispatch, filteredHosts, savedCount, featuredHosts };
- }, [state]);
+ return { state, dispatch, logout, filteredHosts, savedCount, featuredHosts };
+ }, [logout, state]);
 
  return <StayzContext.Provider value={value}>{children}</StayzContext.Provider>;
 }

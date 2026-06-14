@@ -2,7 +2,7 @@
   "name": "pet-stayz",
   "version": "1.0.0",
   "private": true,
-  "description": "Pet Stayz \u2014 Australian pet accommodation aggregator for boarding, sitting, and daycare hosts",
+  "description": "Pet Stayz — Australian pet accommodation aggregator for boarding, sitting, and daycare hosts",
   "main": "index.js",
   "scripts": {
     "start": "expo start",
@@ -23,7 +23,11 @@
   "license": "MIT",
   "dependencies": {
     "@expo/metro-runtime": "~4.0.1",
+    "@react-native-async-storage/async-storage": "1.23.1",
     "expo": "~52.0.0",
+    "expo-auth-session": "~6.0.3",
+    "expo-crypto": "~14.0.2",
+    "expo-web-browser": "~14.0.2",
     "react": "18.3.1",
     "react-dom": "18.3.1",
     "react-native": "0.76.9",

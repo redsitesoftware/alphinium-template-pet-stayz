@@ -1,5 +1,6 @@
 import React from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import LoginScreen from '../screens/LoginScreen';
 import HomeScreen from '../screens/HomeScreen';
 import HostScreen from '../screens/HostScreen';
 import BookingScreen from '../screens/BookingScreen';
@@ -73,10 +74,11 @@ export default function AppNavigator() {
 
  return (
  <View style={styles.container}>
+ {state.phase === 'login' && <LoginScreen />}
  {(state.phase === 'home' || state.phase === 'search') && <HomeScreen />}
  {state.phase === 'host' && <HostScreen />}
  {state.phase === 'booking' && <BookingScreen />}
- <PipChatWidget />
+ {state.phase !== 'login' ? <PipChatWidget /> : null}
  </View>
  );
 }
