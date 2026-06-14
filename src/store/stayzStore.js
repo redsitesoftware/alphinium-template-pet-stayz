@@ -1,4 +1,5 @@
 import React, { createContext, useCallback, useContext, useMemo, useReducer } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const HOSTS = [
  {
@@ -205,8 +206,13 @@ const HOSTS = [
  },
 ];
 
+const JWT_KEY = 'alphinium_auth_token';
+
 const initialState = {
- phase: 'login',
+  phase: 'login',
+  authToken: null,
+  authUser: null,
+  isGuest: false,
  selectedHost: null,
  hosts: HOSTS,
  filters: { type: 'All', petType: 'All', priceMax: 'Any', sortBy: 'Distance', size: 'Any', savedOnly: false },
@@ -217,15 +223,6 @@ const initialState = {
  petSummary: '1 dog · Medium',
  bookingData: { petName: '', breed: '', age: '', size: 'Medium', specialNeeds: '', notes: '' },
  bookingStep: 0,
- chatOpen: false,
- chatMessages: [
- {
- id: 'welcome',
- role: 'assistant',
- text: "Hi! I'm Pip, your pet stay assistant demo — powered by ChatInstance. Pet Stayz is an alphinium aggregator — like Airbnb for pets! I can help find the perfect stay, or show how this works for your pet business.",
- },
- ],
- chatInput: '',
 };
 
 const StayzContext = createContext(null);
@@ -268,30 +265,11 @@ function getFilteredHosts(state) {
  );
 }
 
-function createPipReply(message, state, filteredHosts) {
- const text = message.toLowerCase();
- const topThree = filteredHosts.slice(0, 3).map((host) => `${host.name} in ${host.suburb}`).join(', ');
-
- if (text.includes('business') || text.includes('build')) {
- return 'Pet Stayz can be white-labelled with ChatInstance for assisted search, alphinium-booking for host availability, alphinium-payments for escrow + payouts, and alphinium-maps for suburb/map browsing.';
- }
- if (text.includes('beach')) {
- return 'For beach-friendly stays, Marcus & Lily in Manly and Nina Wu in Bondi are strong matches. Both are available around Fri 6 – Mon 9 June.';
- }
- if (text.includes('daycare')) {
- return `For daycare this week, I'd shortlist ${filteredHosts.filter((host) => host.type.includes('Daycare')).slice(0, 3).map((host) => host.name).join(', ')}. Want the lowest price or best rating?`;
- }
- if (text.includes('boarding') || text.includes('near me')) {
- return `Closest boarding options for ${state.checkIn} to ${state.checkOut}: ${filteredHosts.filter((host) => host.type.includes('Boarding')).slice(0, 3).map((host) => `${host.name} (${host.distance}km)`).join(', ')}.`;
- }
- return topThree
- ? `Based on your current dates (${state.checkIn} → ${state.checkOut}), top picks are ${topThree}.`
- : 'I can help narrow this down by boarding, daycare, pet type, or budget.';
-}
-
 function reducer(state, action) {
  switch (action.type) {
- case 'SET_PHASE':
+ case 'COMPLETE_LOGIN':
+  return { ...state, phase: 'home', authToken: action.guest ? null : action.token ?? null, authUser: action.guest ? null : action.user ?? null, isGuest: Boolean(action.guest), selectedHost: null, bookingStep: 0 };
+  case 'SET_PHASE':
  return { ...state, phase: action.phase };
  case 'SELECT_HOST':
  return { ...state, selectedHost: action.host, phase: 'host' };
@@ -331,52 +309,30 @@ function reducer(state, action) {
  case 'RESET_BOOKING':
  return { ...state, bookingStep: 0, bookingData: initialState.bookingData, phase: 'home', selectedHost: null };
  case 'LOGOUT':
- return {
- ...state,
- phase: 'login',
- selectedHost: null,
- bookingStep: 0,
- chatOpen: false,
- chatInput: '',
- };
- case 'TOGGLE_CHAT':
- return { ...state, chatOpen: !state.chatOpen };
- case 'SET_CHAT_INPUT':
- return { ...state, chatInput: action.value };
- case 'SEND_CHAT_MESSAGE': {
- const trimmed = (action.text || state.chatInput).trim();
- if (!trimmed) return state;
- const userMessage = { id: `${Date.now()}-user`, role: 'user', text: trimmed };
- const filteredHosts = getFilteredHosts(state);
- const assistantMessage = {
- id: `${Date.now()}-assistant`,
- role: 'assistant',
- text: createPipReply(trimmed, state, filteredHosts),
- };
- return {
- ...state,
- chatOpen: true,
- chatInput: '',
- chatMessages: [...state.chatMessages, userMessage, assistantMessage],
- };
- }
+ return { ...state, phase: 'login', authToken: null, authUser: null, isGuest: false, selectedHost: null, bookingStep: 0 };
  default:
  return state;
  }
 }
 
 export function StayzProvider({ children }) {
- const [state, dispatch] = useReducer(reducer, initialState);
- const logout = useCallback(() => dispatch({ type: 'LOGOUT' }), [dispatch]);
+  const [state, dispatch] = useReducer(reducer, initialState);
+  const logout = useCallback(async () => {
+    try {
+      await AsyncStorage.removeItem(JWT_KEY);
+    } finally {
+      dispatch({ type: 'LOGOUT' });
+    }
+  }, [dispatch]);
 
- const value = useMemo(() => {
- const filteredHosts = getFilteredHosts(state);
- const savedCount = state.hosts.filter((host) => host.saved).length;
- const featuredHosts = state.hosts.filter((host) => host.badge === 'Superhost');
- return { state, dispatch, logout, filteredHosts, savedCount, featuredHosts };
- }, [logout, state]);
+  const value = useMemo(() => {
+  const filteredHosts = getFilteredHosts(state);
+  const savedCount = state.hosts.filter((host) => host.saved).length;
+  const featuredHosts = state.hosts.filter((host) => host.badge === 'Superhost');
+  return { state, dispatch, logout, filteredHosts, savedCount, featuredHosts };
+  }, [logout, state]);
 
- return <StayzContext.Provider value={value}>{children}</StayzContext.Provider>;
+  return <StayzContext.Provider value={value}>{children}</StayzContext.Provider>;
 }
 
 export function useStayz() {
