@@ -20,9 +20,9 @@ function FilterPill({ label, active, onPress }) {
 function HostCard({ host, nights, onView, onToggleSaved }) {
  return (
  <View style={styles.card}>
- <Image source={{ uri: getHostHomePhoto(host.id) }} style={styles.homePhoto} />
+ <Image source={{ uri: getHostHomePhoto(host) }} style={styles.homePhoto} />
  <View style={styles.cardTop}>
- <Image source={{ uri: getHostProfilePhoto(host.id) }} style={styles.profilePhoto} />
+ <Image source={{ uri: getHostProfilePhoto(host) }} style={styles.profilePhoto} />
  <Pressable style={styles.saveButton} onPress={() => onToggleSaved(host.id)}>
  <Text style={[styles.saveIcon, host.saved && styles.saveIconActive]}>{host.saved ? '️' : ''}</Text>
  </Pressable>
@@ -59,8 +59,8 @@ function HostCard({ host, nights, onView, onToggleSaved }) {
 function SuperhostCard({ host, onPress }) {
  return (
  <Pressable style={styles.featuredCard} onPress={onPress}>
- <Image source={{ uri: getHostHomePhoto(host.id) }} style={styles.featuredImage} />
- <Image source={{ uri: getHostProfilePhoto(host.id) }} style={styles.featuredAvatar} />
+ <Image source={{ uri: getHostHomePhoto(host) }} style={styles.featuredImage} />
+ <Image source={{ uri: getHostProfilePhoto(host) }} style={styles.featuredAvatar} />
  <Text style={styles.featuredName}>{host.name}</Text>
  <Text style={styles.featuredMeta}>{host.suburb} · {host.rating}</Text>
  <Text style={styles.featuredPrice}>From ${host.pricePerNight}/night</Text>

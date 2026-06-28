@@ -4,7 +4,7 @@ import { STRAPI_URL } from '../config';
  * GET /api/hosts — fetch all host listings (populate photos, reviews)
  */
 export async function getHosts() {
-  const response = await fetch(`${STRAPI_URL}/api/hosts?populate=*`);
+  const response = await fetch(`${STRAPI_URL}/api/hosts?populate=profile_photo,home_photo,gallery_photos,reviews`);
 
   if (!response.ok) {
     throw new Error(`Failed to fetch hosts: HTTP ${response.status}`);

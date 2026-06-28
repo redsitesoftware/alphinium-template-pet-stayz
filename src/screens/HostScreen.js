@@ -21,8 +21,8 @@ export default function HostScreen() {
 
  <View style={styles.heroCard}>
  <View style={styles.heroBanner}>
- <Image source={{ uri: getHostHomePhoto(host.id) }} style={styles.heroImage} />
- <Image source={{ uri: getHostProfilePhoto(host.id) }} style={styles.heroAvatar} />
+ <Image source={{ uri: getHostHomePhoto(host) }} style={styles.heroImage} />
+ <Image source={{ uri: getHostProfilePhoto(host) }} style={styles.heroAvatar} />
  </View>
 
  <View style={styles.heroBody}>

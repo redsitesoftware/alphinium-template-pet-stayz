@@ -362,6 +362,9 @@ export function StayzProvider({ children }) {
           availableFrom: a.availableFrom ?? '',
           saved: a.saved ?? false,
           reviews: a.reviews ?? [],
+          profilePhotoUrl: a.profile_photo?.data?.attributes?.url ?? null,
+          homePhotoUrl: a.home_photo?.data?.attributes?.url ?? null,
+          galleryPhotos: (a.gallery_photos?.data ?? []).map(p => p.attributes?.url ?? p.url).filter(Boolean),
         };
       });
       dispatch({ type: 'SET_HOSTS', hosts: mapped });
