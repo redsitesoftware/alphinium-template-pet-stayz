@@ -280,25 +280,16 @@ function getFilteredHosts(state) {
 
  const filtered = state.hosts.filter((host) => {
   if (state.filters.savedOnly && !host.saved) return false;
+  if (state.filters.verifiedOnly && !host.verified) return false;
   if (state.filters.type !== 'All' && !host.type.includes(state.filters.type)) return false;
   if (state.filters.petType !== 'All' && !host.petTypes.includes(state.filters.petType)) return false;
   if (state.filters.priceMax !== 'Any' && host.pricePerNight > Number(state.filters.priceMax)) return false;
   if (!matchesSize(state.filters.size, host)) return false;
   if (!query) return true;
- return sortHosts(
- state.hosts.filter((host) => {
- if (state.filters.savedOnly && !host.saved) return false;
- if (state.filters.verifiedOnly && !host.verified) return false;
- if (state.filters.type !== 'All' && !host.type.includes(state.filters.type)) return false;
- if (state.filters.petType !== 'All' && !host.petTypes.includes(state.filters.petType)) return false;
- if (state.filters.priceMax !== 'Any' && host.pricePerNight > Number(state.filters.priceMax)) return false;
- if (!matchesSize(state.filters.size, host)) return false;
- if (!query) return true;
-
   return [host.name, host.suburb, host.homeType, host.badge || '', host.bio, host.type.join(' '), host.petTypes.join(' ')]
-  .join(' ')
-  .toLowerCase()
-  .includes(query);
+   .join(' ')
+   .toLowerCase()
+   .includes(query);
  });
 
  if (state.filters.sortBy === 'Distance' && state.userLocation) {
