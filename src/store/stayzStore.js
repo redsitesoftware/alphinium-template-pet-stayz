@@ -1,6 +1,6 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useReducer } from 'react';
-import { getHosts } from '../services/HostService';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { getMyPets } from '../services/PetService';
 
 const HOSTS = [
  {
@@ -225,6 +225,8 @@ const initialState = {
  petSummary: '1 dog · Medium',
  bookingData: { petId: null, petName: '', breed: '', age: '', size: 'Medium', specialNeeds: '', notes: '' },
  bookingStep: 0,
+ pets: [],
+ petsLoading: false,
 };
 
 const StayzContext = createContext(null);
@@ -308,10 +310,12 @@ function reducer(state, action) {
  return { ...state, bookingStep: Math.min(state.bookingStep + 1, 2) };
  case 'PREV_BOOKING_STEP':
  return { ...state, bookingStep: Math.max(state.bookingStep - 1, 0) };
- case 'SET_HOSTS':
- return { ...state, hosts: action.hosts.length > 0 ? action.hosts : HOSTS, hostsLoading: false };
- case 'SET_HOSTS_LOADING':
- return { ...state, hostsLoading: action.loading };
+ case 'SET_PETS':
+ return { ...state, pets: action.pets, petsLoading: false };
+ case 'ADD_PET':
+ return { ...state, pets: [...state.pets, action.pet] };
+ case 'SET_PETS_LOADING':
+ return { ...state, petsLoading: action.loading };
  case 'RESET_BOOKING':
  return { ...state, bookingStep: 0, bookingData: initialState.bookingData, phase: 'home', selectedHost: null };
  case 'LOGOUT':
@@ -324,55 +328,41 @@ function reducer(state, action) {
 export function StayzProvider({ children }) {
   const [state, dispatch] = useReducer(reducer, initialState);
 
-  const loadHosts = useCallback(async () => {
-    dispatch({ type: 'SET_HOSTS_LOADING', loading: true });
+  const loadMyPets = useCallback(async (authToken) => {
+    if (!authToken) return;
+    dispatch({ type: 'SET_PETS_LOADING', loading: true });
     try {
-      const rawHosts = await getHosts();
-      const mapped = rawHosts.map((item) => {
+      const rawPets = await getMyPets(authToken);
+      const pets = rawPets.map((item) => {
         const a = item.attributes ?? item;
         return {
           id: item.id ? `api-${item.id}` : a.id,
           name: a.name ?? '',
-          emoji: a.emoji ?? '',
-          suburb: a.suburb ?? '',
-          distance: a.distance ?? 0,
-          rating: a.rating ?? 0,
-          reviewCount: a.review_count ?? a.reviewCount ?? 0,
-          hostingSince: a.hosting_since ?? a.hostingSince ?? '',
-          pricePerNight: a.price_per_night ?? a.pricePerNight ?? 0,
-          priceDaycare: a.price_daycare ?? a.priceDaycare ?? 0,
-          type: a.type ?? [],
-          petTypes: a.pet_types ?? a.petTypes ?? [],
-          maxDogs: a.max_dogs ?? a.maxDogs ?? 1,
-          maxSize: a.max_size ?? a.maxSize ?? 'Any size',
-          badge: a.badge ?? null,
-          badgeColor: a.badge_color ?? a.badgeColor ?? null,
-          homeType: a.home_type ?? a.homeType ?? '',
-          bio: a.bio ?? '',
-          amenities: a.amenities ?? [],
-          availableFrom: a.availableFrom ?? '',
-          saved: a.saved ?? false,
-          reviews: a.reviews ?? [],
+          species: a.species ?? '',
+          breed: a.breed ?? '',
+          age: a.age ?? null,
+          weight: a.weight ?? null,
+          temperament: a.temperament ?? '',
+          vaccinations: a.vaccinations ?? '',
+          vetName: a.vet_name ?? a.vetName ?? '',
+          vetPhone: a.vet_phone ?? a.vetPhone ?? '',
+          specialCareNotes: a.special_care_notes ?? a.specialCareNotes ?? '',
+          photos: a.photos?.data ?? a.photos ?? [],
         };
       });
-      dispatch({ type: 'SET_HOSTS', hosts: mapped });
+      dispatch({ type: 'SET_PETS', pets });
     } catch {
-      // API unreachable — fallback to demo data (SET_HOSTS with empty array keeps HOSTS)
-      dispatch({ type: 'SET_HOSTS', hosts: [] });
+      // API unreachable — silently keep empty pets array, no crash
+      dispatch({ type: 'SET_PETS_LOADING', loading: false });
     }
   }, []);
 
-  // Load hosts on mount
+  // Load pets whenever authToken is set (login / session restore)
   useEffect(() => {
-    loadHosts();
-  }, [loadHosts]);
-
-  // Reload hosts after successful login
-  useEffect(() => {
-    if (state.phase === 'home' && state.authToken) {
-      loadHosts();
+    if (state.authToken) {
+      loadMyPets(state.authToken);
     }
-  }, [state.phase, state.authToken, loadHosts]);
+  }, [state.authToken, loadMyPets]);
 
   const logout = useCallback(async () => {
     try {
@@ -386,8 +376,8 @@ export function StayzProvider({ children }) {
   const filteredHosts = getFilteredHosts(state);
   const savedCount = state.hosts.filter((host) => host.saved).length;
   const featuredHosts = state.hosts.filter((host) => host.badge === 'Superhost');
-  return { state, dispatch, logout, loadHosts, filteredHosts, savedCount, featuredHosts };
-  }, [loadHosts, logout, state]);
+  return { state, dispatch, logout, loadMyPets, filteredHosts, savedCount, featuredHosts };
+  }, [loadMyPets, logout, state]);
 
   return <StayzContext.Provider value={value}>{children}</StayzContext.Provider>;
 }
