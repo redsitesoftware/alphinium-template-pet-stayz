@@ -1,7 +1,7 @@
 /**
  * Haversine distance between two lat/lng points, in kilometres.
  */
-function haversineKm(lat1, lng1, lat2, lng2) {
+export function haversineKm(lat1, lng1, lat2, lng2) {
   const R = 6371;
   const dLat = ((lat2 - lat1) * Math.PI) / 180;
   const dLng = ((lng2 - lng1) * Math.PI) / 180;
@@ -16,18 +16,18 @@ function haversineKm(lat1, lng1, lat2, lng2) {
 
 /**
  * Sort an array of hosts by distance from (userLat, userLng).
- * If a host has lat/lng coordinates they are used for an accurate calculation;
+ * If a host has latitude/longitude coordinates they are used for accurate calculation;
  * otherwise the existing host.distance value is used as a fallback.
  */
 export function sortByDistance(hosts, userLat, userLng) {
   return [...hosts].sort((a, b) => {
     const distA =
-      a.lat != null && a.lng != null
-        ? haversineKm(userLat, userLng, a.lat, a.lng)
+      a.latitude != null && a.longitude != null
+        ? haversineKm(userLat, userLng, a.latitude, a.longitude)
         : (a.distance ?? 0);
     const distB =
-      b.lat != null && b.lng != null
-        ? haversineKm(userLat, userLng, b.lat, b.lng)
+      b.latitude != null && b.longitude != null
+        ? haversineKm(userLat, userLng, b.latitude, b.longitude)
         : (b.distance ?? 0);
     return distA - distB;
   });
