@@ -1,0 +1,27 @@
+{
+  "collectionName": "components_host_reviews",
+  "info": {
+    "displayName": "Review",
+    "description": "A single guest review for a host listing."
+  },
+  "options": {},
+  "attributes": {
+    "name": {
+      "type": "string",
+      "required": true,
+      "comment": "Reviewer name (e.g. 'Emma K.')"
+    },
+    "stars": {
+      "type": "integer",
+      "required": true,
+      "min": 1,
+      "max": 5,
+      "comment": "Star rating 1–5"
+    },
+    "text": {
+      "type": "text",
+      "required": true,
+      "comment": "Review body text"
+    }
+  }
+}

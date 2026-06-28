@@ -1,0 +1,111 @@
+{
+  "kind": "collectionType",
+  "collectionName": "hosts",
+  "info": {
+    "singularName": "host",
+    "pluralName": "hosts",
+    "displayName": "Host",
+    "description": "Pet-friendly host listings. Enables GET /api/hosts and POST /api/hosts (auth required). Fields match the hardcoded HOSTS shape in src/store/stayzStore.js."
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "pluginsOptions": {
+    "users-permissions": {
+      "enabled": true
+    }
+  },
+  "attributes": {
+    "name": {
+      "type": "string",
+      "required": true,
+      "comment": "Host name / household name"
+    },
+    "suburb": {
+      "type": "string",
+      "comment": "Location suburb"
+    },
+    "distance": {
+      "type": "decimal",
+      "comment": "km from city centre — optional, can be computed"
+    },
+    "rating": {
+      "type": "decimal",
+      "comment": "Average star rating"
+    },
+    "review_count": {
+      "type": "integer",
+      "default": 0
+    },
+    "hosting_since": {
+      "type": "string",
+      "comment": "e.g. '2022'"
+    },
+    "price_per_night": {
+      "type": "integer",
+      "comment": "AUD per night (boarding)"
+    },
+    "price_daycare": {
+      "type": "integer",
+      "comment": "AUD per day (daycare)"
+    },
+    "type": {
+      "type": "json",
+      "comment": "Array of service types — e.g. ['Boarding', 'Daycare', 'Drop-in']"
+    },
+    "pet_types": {
+      "type": "json",
+      "comment": "Array of accepted pet types — e.g. ['Dogs', 'Cats', 'Small animals']"
+    },
+    "max_dogs": {
+      "type": "integer",
+      "comment": "Maximum number of dogs hosted simultaneously"
+    },
+    "max_size": {
+      "type": "string",
+      "comment": "e.g. 'Any size', 'Up to 25kg'"
+    },
+    "badge": {
+      "type": "string",
+      "required": false,
+      "comment": "Badge label — nullable (e.g. 'Superhost', 'Top Rated')"
+    },
+    "badge_color": {
+      "type": "string",
+      "required": false,
+      "comment": "Badge hex colour — nullable (e.g. '#EA580C')"
+    },
+    "home_type": {
+      "type": "string",
+      "comment": "e.g. 'House with garden', 'Apartment with balcony'"
+    },
+    "bio": {
+      "type": "text",
+      "comment": "Free-text host biography"
+    },
+    "amenities": {
+      "type": "json",
+      "comment": "Array of amenity strings — e.g. ['Large fenced garden', 'Daily park visits']"
+    },
+    "profile_photo": {
+      "type": "media",
+      "multiple": false,
+      "required": false,
+      "allowedTypes": ["images"],
+      "comment": "Host profile/avatar image"
+    },
+    "home_photo": {
+      "type": "media",
+      "multiple": false,
+      "required": false,
+      "allowedTypes": ["images"],
+      "comment": "Home / property image"
+    },
+    "reviews": {
+      "type": "component",
+      "repeatable": true,
+      "component": "host.review",
+      "comment": "Repeatable review component — { name, stars, text }"
+    }
+  }
+}
