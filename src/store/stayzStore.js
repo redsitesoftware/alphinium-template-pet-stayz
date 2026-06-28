@@ -1,5 +1,6 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useReducer } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { getHosts } from '../services/HostService';
 import { getMyPets } from '../services/PetService';
 
 const HOSTS = [
@@ -310,6 +311,10 @@ function reducer(state, action) {
  return { ...state, bookingStep: Math.min(state.bookingStep + 1, 2) };
  case 'PREV_BOOKING_STEP':
  return { ...state, bookingStep: Math.max(state.bookingStep - 1, 0) };
+ case 'SET_HOSTS':
+ return { ...state, hosts: action.hosts.length > 0 ? action.hosts : HOSTS, hostsLoading: false };
+ case 'SET_HOSTS_LOADING':
+ return { ...state, hostsLoading: action.loading };
  case 'SET_PETS':
  return { ...state, pets: action.pets, petsLoading: false };
  case 'ADD_PET':
@@ -327,6 +332,56 @@ function reducer(state, action) {
 
 export function StayzProvider({ children }) {
   const [state, dispatch] = useReducer(reducer, initialState);
+
+  const loadHosts = useCallback(async () => {
+    dispatch({ type: 'SET_HOSTS_LOADING', loading: true });
+    try {
+      const rawHosts = await getHosts();
+      const mapped = rawHosts.map((item) => {
+        const a = item.attributes ?? item;
+        return {
+          id: item.id ? `api-${item.id}` : a.id,
+          name: a.name ?? '',
+          emoji: a.emoji ?? '',
+          suburb: a.suburb ?? '',
+          distance: a.distance ?? 0,
+          rating: a.rating ?? 0,
+          reviewCount: a.review_count ?? a.reviewCount ?? 0,
+          hostingSince: a.hosting_since ?? a.hostingSince ?? '',
+          pricePerNight: a.price_per_night ?? a.pricePerNight ?? 0,
+          priceDaycare: a.price_daycare ?? a.priceDaycare ?? 0,
+          type: a.type ?? [],
+          petTypes: a.pet_types ?? a.petTypes ?? [],
+          maxDogs: a.max_dogs ?? a.maxDogs ?? 1,
+          maxSize: a.max_size ?? a.maxSize ?? 'Any size',
+          badge: a.badge ?? null,
+          badgeColor: a.badge_color ?? a.badgeColor ?? null,
+          homeType: a.home_type ?? a.homeType ?? '',
+          bio: a.bio ?? '',
+          amenities: a.amenities ?? [],
+          availableFrom: a.availableFrom ?? '',
+          saved: a.saved ?? false,
+          reviews: a.reviews ?? [],
+        };
+      });
+      dispatch({ type: 'SET_HOSTS', hosts: mapped });
+    } catch {
+      // API unreachable — fallback to demo data (SET_HOSTS with empty array keeps HOSTS)
+      dispatch({ type: 'SET_HOSTS', hosts: [] });
+    }
+  }, []);
+
+  // Load hosts on mount
+  useEffect(() => {
+    loadHosts();
+  }, [loadHosts]);
+
+  // Reload hosts after successful login
+  useEffect(() => {
+    if (state.phase === 'home' && state.authToken) {
+      loadHosts();
+    }
+  }, [state.phase, state.authToken, loadHosts]);
 
   const loadMyPets = useCallback(async (authToken) => {
     if (!authToken) return;
@@ -376,8 +431,8 @@ export function StayzProvider({ children }) {
   const filteredHosts = getFilteredHosts(state);
   const savedCount = state.hosts.filter((host) => host.saved).length;
   const featuredHosts = state.hosts.filter((host) => host.badge === 'Superhost');
-  return { state, dispatch, logout, loadMyPets, filteredHosts, savedCount, featuredHosts };
-  }, [loadMyPets, logout, state]);
+  return { state, dispatch, logout, loadHosts, loadMyPets, filteredHosts, savedCount, featuredHosts };
+  }, [loadHosts, loadMyPets, logout, state]);
 
   return <StayzContext.Provider value={value}>{children}</StayzContext.Provider>;
 }
