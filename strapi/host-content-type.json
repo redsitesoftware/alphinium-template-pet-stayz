@@ -140,6 +140,16 @@
       "required": false,
       "allowedTypes": ["images", "files"],
       "comment": "Host-uploaded ID document for admin review (private — not exposed to guests via populate)"
+    },
+    "latitude": {
+      "type": "float",
+      "required": false,
+      "comment": "Host location latitude (WGS84)"
+    },
+    "longitude": {
+      "type": "float",
+      "required": false,
+      "comment": "Host location longitude (WGS84)"
     }
   }
 }

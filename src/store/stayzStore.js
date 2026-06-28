@@ -17,6 +17,7 @@ const HOSTS = [
  amenities: [' Large fenced garden', '️ Dog sleeps on bed', ' Own bathroom/shower area', ' Daily park visits', ' Daily photo updates'],
  availableFrom: 'Tonight',
  saved: true,
+ latitude: -33.8269, longitude: 151.2439,
  reviews: [
  { name: 'Emma K.', stars: 5, text: 'Sarah and Tom are absolute legends. Bella had the time of her life!' },
  { name: 'James M.', stars: 5, text: 'Best boarding experience ever. Daily photos, updates, and a very happy dog.' },
@@ -35,6 +36,7 @@ const HOSTS = [
  amenities: [' Vet nurse background', ' Walks twice daily', ' Cats welcome', ' Morning & evening updates'],
  availableFrom: 'Today',
  saved: false,
+ latitude: -33.8979, longitude: 151.1795,
  reviews: [
  { name: 'Priya S.', stars: 5, text: 'Jessica is incredible. My cat actually seemed sad to come home!' },
  ],
@@ -52,6 +54,7 @@ const HOSTS = [
  amenities: ['️ Beach walks daily', ' Large backyard', ' Work from home — never alone', ' 3 friendly resident dogs'],
  availableFrom: 'This weekend',
  saved: true,
+ latitude: -33.7969, longitude: 151.285,
  reviews: [
  { name: 'Tom A.', stars: 5, text: 'My dog went to the beach every day. I think he prefers Marcus to me now ' },
  ],
@@ -69,6 +72,7 @@ const HOSTS = [
  amenities: [' Small pets specialist', ' Hourly updates', ' Lots of play time'],
  availableFrom: 'Today',
  saved: false,
+ latitude: -33.8867, longitude: 151.2094,
  reviews: [],
  },
  {
@@ -84,6 +88,7 @@ const HOSTS = [
  amenities: [' Webcam access', ' 2-acre property', ' Dog pool', ' Medication management', ' Vet on call'],
  availableFrom: 'Tonight',
  saved: false,
+ latitude: -33.7635, longitude: 151.139,
  reviews: [
  { name: 'Rachel T.', stars: 5, text: 'Best facility we have found. Webcam access means I never worry.' },
  ],
@@ -101,6 +106,7 @@ const HOSTS = [
  amenities: [' 2 friendly resident labs', ' Fully fenced yard', ' Bathed before pickup'],
  availableFrom: 'Tomorrow',
  saved: false,
+ latitude: -33.862, longitude: 151.18,
  reviews: [],
  },
  {
@@ -116,6 +122,7 @@ const HOSTS = [
  amenities: [' Coastal walks', ' Enrichment games', ' Work from home', ' Live photo journal'],
  availableFrom: 'Tomorrow',
  saved: false,
+ latitude: -33.8915, longitude: 151.2767,
  reviews: [
  { name: 'Leah P.', stars: 5, text: 'Every update felt premium. Our lab came back calm and very loved.' },
  ],
@@ -133,6 +140,7 @@ const HOSTS = [
  amenities: [' Sunny courtyard', ' Rabbit-friendly routines', ' Pickup available', ' Daily updates'],
  availableFrom: 'Tonight',
  saved: false,
+ latitude: -37.8148, longitude: 144.9963,
  reviews: [
  { name: 'Mia J.', stars: 5, text: 'Oliver made our rescue dog feel safe immediately.' },
  ],
@@ -150,6 +158,7 @@ const HOSTS = [
  amenities: [' Separate cat suite', ' Secure play yard', ' Video check-ins', ' Medication support'],
  availableFrom: 'Today',
  saved: false,
+ latitude: -32.0569, longitude: 115.747,
  reviews: [
  { name: 'Sophie R.', stars: 5, text: 'The perfect balance of professional and homey.' },
  { name: 'Dan H.', stars: 5, text: 'Their cat setup is better than most catteries.' },
@@ -168,6 +177,7 @@ const HOSTS = [
  amenities: [' Gentle kids used to dogs', ' Three walks daily', '️ Couch cuddles welcome', ' Bedtime photo updates'],
  availableFrom: 'This weekend',
  saved: false,
+ latitude: -33.8848, longitude: 151.2268,
  reviews: [
  { name: 'Chris W.', stars: 5, text: 'Our cavoodle adored staying with the Harper family.' },
  ],
@@ -185,6 +195,7 @@ const HOSTS = [
  amenities: ['️ Luxury bedding', ' Premium meal prep', ' Concierge-style updates', ' Grooming add-ons'],
  availableFrom: 'Tomorrow',
  saved: false,
+ latitude: -37.8389, longitude: 144.9894,
  reviews: [
  { name: 'Anita L.', stars: 5, text: 'This is honestly a boutique hotel for pets.' },
  ],
@@ -202,6 +213,7 @@ const HOSTS = [
  amenities: [' Rooftop exercise area', '⏰ Extended pickup hours', ' Small pet safe room', ' Midday updates'],
  availableFrom: 'Today',
  saved: false,
+ latitude: -27.4579, longitude: 153.0326,
  reviews: [
  { name: 'Kylie N.', stars: 5, text: 'Exactly what we needed for weekday daycare.' },
  ],
