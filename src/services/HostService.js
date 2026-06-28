@@ -40,6 +40,8 @@ export function mapHost(item) {
       dateTo: o.date_to,
       pricePerNight: o.price_per_night,
     })),
+    latitude: a.latitude ?? null,
+    longitude: a.longitude ?? null,
   };
 }
 
