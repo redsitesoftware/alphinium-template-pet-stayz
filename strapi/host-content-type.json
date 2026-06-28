@@ -113,6 +113,13 @@
       "repeatable": true,
       "component": "host.review",
       "comment": "Repeatable review component — { name, stars, text }"
+    },
+    "pricing_overrides": {
+      "type": "component",
+      "repeatable": true,
+      "component": "host.pricing-override",
+      "required": false,
+      "comment": "Ordered list of date-range price overrides. Base rate = price_per_night field."
     }
   }
 }
