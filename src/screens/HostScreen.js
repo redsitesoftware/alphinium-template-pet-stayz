@@ -1,6 +1,7 @@
 import React from 'react';
 import { Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { getHostHomePhoto, getHostProfilePhoto } from '../media';
+import { calculateStayPrice } from '../utils/pricing';
 import { useStayz } from '../store/stayzStore';
 import { colors, radius, shadows, spacing, typography } from '../theme';
 
@@ -65,7 +66,7 @@ export default function HostScreen() {
 
  <Text style={styles.sectionTitle}>Pricing</Text>
  <Text style={styles.bodyText}>${host.pricePerNight}/night · ${host.priceDaycare}/daycare day</Text>
- <Text style={styles.total}>{state.nights} nights ({state.checkIn} – {state.checkOut}): ${host.pricePerNight * state.nights}</Text>
+ <Text style={styles.total}>{state.nights} nights ({state.checkIn} – {state.checkOut}): ${calculateStayPrice(host, state.checkIn, state.checkOut).total}</Text>
 
  <Text style={styles.sectionTitle}>Reviews</Text>
  {host.reviews.length ? host.reviews.slice(0, 3).map((review) => (
@@ -81,7 +82,7 @@ export default function HostScreen() {
 
  <View style={styles.footerBar}>
  <View>
- <Text style={styles.footerPrice}>${host.pricePerNight * state.nights}</Text>
+ <Text style={styles.footerPrice}>${calculateStayPrice(host, state.checkIn, state.checkOut).total}</Text>
  <Text style={styles.footerMeta}>{state.nights} nights · {state.checkIn} – {state.checkOut}</Text>
  </View>
  <Pressable style={styles.bookButton} onPress={() => dispatch({ type: 'OPEN_BOOKING', host })}>
