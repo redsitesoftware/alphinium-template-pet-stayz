@@ -9,7 +9,7 @@
     "android": "expo run:android",
     "ios": "expo run:ios",
     "web": "expo start --web",
-    "build": "expo export --platform web && cp web/auth-popup.html dist/auth-popup.html"
+    "build": "expo export --platform web && node scripts/inject-ga.js && cp web/auth-popup.html dist/auth-popup.html"
   },
   "keywords": [
     "react-native",
