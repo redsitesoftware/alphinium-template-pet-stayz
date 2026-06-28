@@ -32,10 +32,14 @@ export const PET_STAYZ_IMAGES = {
  hero: 'https://images.unsplash.com/photo-1516734212186-a967f81ad0d7?auto=format&fit=crop&w=1400&q=80',
 };
 
-export function getHostProfilePhoto(hostId) {
- return HOST_PROFILE_PHOTOS[hostId] || PET_STAYZ_IMAGES.hero;
+export function getHostProfilePhoto(host) {
+  if (typeof host === 'object' && host?.profilePhotoUrl) return host.profilePhotoUrl;
+  const id = typeof host === 'string' ? host : host?.id;
+  return HOST_PROFILE_PHOTOS[id] || PET_STAYZ_IMAGES.hero;
 }
 
-export function getHostHomePhoto(hostId) {
- return HOST_HOME_PHOTOS[hostId] || PET_STAYZ_IMAGES.hero;
+export function getHostHomePhoto(host) {
+  if (typeof host === 'object' && host?.homePhotoUrl) return host.homePhotoUrl;
+  const id = typeof host === 'string' ? host : host?.id;
+  return HOST_HOME_PHOTOS[id] || PET_STAYZ_IMAGES.hero;
 }

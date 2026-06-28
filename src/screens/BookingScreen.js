@@ -59,9 +59,9 @@ export default function BookingScreen() {
  </Pressable>
 
  <View style={styles.heroCard}>
- <Image source={{ uri: getHostHomePhoto(host.id) }} style={styles.heroImage} />
+ <Image source={{ uri: getHostHomePhoto(host) }} style={styles.heroImage} />
  <View style={styles.heroBody}>
- <Image source={{ uri: getHostProfilePhoto(host.id) }} style={styles.heroAvatar} />
+ <Image source={{ uri: getHostProfilePhoto(host) }} style={styles.heroAvatar} />
  <Text style={styles.title}>Book with {host.name}</Text>
  <Text style={styles.subtitle}>{state.checkIn} – {state.checkOut} · {state.nights} nights confirmed</Text>
  </View>

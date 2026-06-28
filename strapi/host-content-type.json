@@ -101,6 +101,13 @@
       "allowedTypes": ["images"],
       "comment": "Home / property image"
     },
+    "gallery_photos": {
+      "type": "media",
+      "multiple": true,
+      "required": false,
+      "allowedTypes": ["images"],
+      "comment": "Ordered gallery photos (up to 8). First image = cover photo."
+    },
     "reviews": {
       "type": "component",
       "repeatable": true,
