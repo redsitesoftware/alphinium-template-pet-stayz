@@ -1,6 +1,8 @@
 import React, { useMemo, useState } from 'react';
-import { Image, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Alert, Image, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import * as Location from 'expo-location';
 import { getHostHomePhoto, getHostProfilePhoto, PET_STAYZ_IMAGES } from '../media';
+import { haversineKm } from '../utils/geo';
 import { useStayz } from '../store/stayzStore';
 import { colors, radius, shadows, spacing, typography } from '../theme';
 
@@ -17,7 +19,10 @@ function FilterPill({ label, active, onPress }) {
  );
 }
 
-function HostCard({ host, nights, onView, onToggleSaved }) {
+function HostCard({ host, nights, onView, onToggleSaved, userLocation }) {
+ const displayDistance = (userLocation && host.latitude != null)
+  ? haversineKm(userLocation.lat, userLocation.lng, host.latitude, host.longitude).toFixed(1)
+  : host.distance?.toFixed(1) ?? '?';
  return (
  <View style={styles.card}>
  <Image source={{ uri: getHostHomePhoto(host) }} style={styles.homePhoto} />
@@ -33,7 +38,7 @@ function HostCard({ host, nights, onView, onToggleSaved }) {
  </View>
 
  <Text style={styles.hostName}>{host.name}</Text>
- <Text style={styles.meta}> {host.suburb} · {host.distance.toFixed(1)}km</Text>
+ <Text style={styles.meta}> {host.suburb} · {displayDistance}km</Text>
  <Text style={styles.homeType}>{host.homeType}</Text>
 
  <View style={styles.inlineWrap}>
@@ -84,6 +89,26 @@ export default function HomeScreen() {
  const [localNights, setLocalNights] = useState(String(state.nights));
  const [petSummary, setPetSummary] = useState(state.petSummary);
  const isSearchOpen = state.phase === 'search';
+ const nearMeActive = state.filters.sortBy === 'Distance' && state.userLocation != null;
+
+ async function requestNearMe() {
+  if (nearMeActive) {
+   dispatch({ type: 'SET_USER_LOCATION', location: null });
+   return;
+  }
+  try {
+   const { status } = await Location.requestForegroundPermissionsAsync();
+   if (status !== 'granted') {
+    Alert.alert('Location Unavailable', 'Enable location permission to sort hosts by distance from you.');
+    return;
+   }
+   const pos = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
+   dispatch({ type: 'SET_USER_LOCATION', location: { lat: pos.coords.latitude, lng: pos.coords.longitude } });
+   dispatch({ type: 'UPDATE_FILTER', key: 'sortBy', value: 'Distance' });
+  } catch {
+   Alert.alert('Location Unavailable', 'Could not retrieve your location. Please try again.');
+  }
+ }
 
  const resultsLabel = useMemo(() => `${filteredHosts.length} hosts available · Fri 6 – Mon 9 June`, [filteredHosts.length]);
 
@@ -170,6 +195,11 @@ export default function HomeScreen() {
  onPress={() => dispatch({ type: 'UPDATE_FILTER', key: 'sortBy', value: option })}
  />
  ))}
+ <Pressable style={[styles.nearMePill, nearMeActive && styles.nearMePillActive]} onPress={requestNearMe}>
+  <Text style={[styles.nearMePillText, nearMeActive && styles.nearMePillTextActive]}>
+  {nearMeActive ? '📍Near Me ✓' : '📍Near Me'}
+  </Text>
+ </Pressable>
  </ScrollView>
 
  <Text style={styles.filterLabel}>Size</Text>
@@ -220,6 +250,7 @@ export default function HomeScreen() {
  nights={state.nights}
  onView={() => dispatch({ type: 'SELECT_HOST', host })}
  onToggleSaved={(id) => dispatch({ type: 'TOGGLE_SAVED', id })}
+ userLocation={state.userLocation}
  />
  ))}
  </View>
@@ -355,6 +386,25 @@ const styles = StyleSheet.create({
  fontWeight: '700',
  },
  pillTextActive: {
+ color: colors.card,
+ },
+ nearMePill: {
+ backgroundColor: colors.card,
+ borderWidth: 1,
+ borderColor: colors.primary,
+ paddingHorizontal: spacing.md,
+ paddingVertical: 10,
+ borderRadius: radius.round,
+ marginLeft: spacing.sm,
+ },
+ nearMePillActive: {
+ backgroundColor: colors.primary,
+ },
+ nearMePillText: {
+ color: colors.primary,
+ fontWeight: '700',
+ },
+ nearMePillTextActive: {
  color: colors.card,
  },
  resultsRow: {

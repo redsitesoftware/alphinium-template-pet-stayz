@@ -2,6 +2,7 @@ import React, { createContext, useCallback, useContext, useEffect, useMemo, useR
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getHosts, mapHost } from '../services/HostService';
 import { getMyPets } from '../services/PetService';
+import { sortByDistance } from '../utils/geo';
 
 const HOSTS = [
  {
@@ -228,6 +229,7 @@ const initialState = {
  bookingStep: 0,
  pets: [],
  petsLoading: false,
+ userLocation: null,
 };
 
 const StayzContext = createContext(null);
@@ -252,22 +254,24 @@ function sortHosts(hosts, sortBy) {
 function getFilteredHosts(state) {
  const query = state.searchText.trim().toLowerCase();
 
- return sortHosts(
- state.hosts.filter((host) => {
- if (state.filters.savedOnly && !host.saved) return false;
- if (state.filters.type !== 'All' && !host.type.includes(state.filters.type)) return false;
- if (state.filters.petType !== 'All' && !host.petTypes.includes(state.filters.petType)) return false;
- if (state.filters.priceMax !== 'Any' && host.pricePerNight > Number(state.filters.priceMax)) return false;
- if (!matchesSize(state.filters.size, host)) return false;
- if (!query) return true;
+ const filtered = state.hosts.filter((host) => {
+  if (state.filters.savedOnly && !host.saved) return false;
+  if (state.filters.type !== 'All' && !host.type.includes(state.filters.type)) return false;
+  if (state.filters.petType !== 'All' && !host.petTypes.includes(state.filters.petType)) return false;
+  if (state.filters.priceMax !== 'Any' && host.pricePerNight > Number(state.filters.priceMax)) return false;
+  if (!matchesSize(state.filters.size, host)) return false;
+  if (!query) return true;
 
- return [host.name, host.suburb, host.homeType, host.badge || '', host.bio, host.type.join(' '), host.petTypes.join(' ')]
- .join(' ')
- .toLowerCase()
- .includes(query);
- }),
- state.filters.sortBy,
- );
+  return [host.name, host.suburb, host.homeType, host.badge || '', host.bio, host.type.join(' '), host.petTypes.join(' ')]
+  .join(' ')
+  .toLowerCase()
+  .includes(query);
+ });
+
+ if (state.filters.sortBy === 'Distance' && state.userLocation) {
+  return sortByDistance(filtered, state.userLocation.lat, state.userLocation.lng);
+ }
+ return sortHosts(filtered, state.filters.sortBy);
 }
 
 function reducer(state, action) {
@@ -321,6 +325,8 @@ function reducer(state, action) {
  return { ...state, pets: [...state.pets, action.pet] };
  case 'SET_PETS_LOADING':
  return { ...state, petsLoading: action.loading };
+ case 'SET_USER_LOCATION':
+ return { ...state, userLocation: action.location };
  case 'RESET_BOOKING':
  return { ...state, bookingStep: 0, bookingData: initialState.bookingData, phase: 'home', selectedHost: null };
  case 'LOGOUT':
