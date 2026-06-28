@@ -1,6 +1,6 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useReducer } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { getHosts } from '../services/HostService';
+import { getHosts, mapHost } from '../services/HostService';
 import { getMyPets } from '../services/PetService';
 
 const HOSTS = [
@@ -337,36 +337,7 @@ export function StayzProvider({ children }) {
     dispatch({ type: 'SET_HOSTS_LOADING', loading: true });
     try {
       const rawHosts = await getHosts();
-      const mapped = rawHosts.map((item) => {
-        const a = item.attributes ?? item;
-        return {
-          id: item.id ? `api-${item.id}` : a.id,
-          name: a.name ?? '',
-          emoji: a.emoji ?? '',
-          suburb: a.suburb ?? '',
-          distance: a.distance ?? 0,
-          rating: a.rating ?? 0,
-          reviewCount: a.review_count ?? a.reviewCount ?? 0,
-          hostingSince: a.hosting_since ?? a.hostingSince ?? '',
-          pricePerNight: a.price_per_night ?? a.pricePerNight ?? 0,
-          priceDaycare: a.price_daycare ?? a.priceDaycare ?? 0,
-          type: a.type ?? [],
-          petTypes: a.pet_types ?? a.petTypes ?? [],
-          maxDogs: a.max_dogs ?? a.maxDogs ?? 1,
-          maxSize: a.max_size ?? a.maxSize ?? 'Any size',
-          badge: a.badge ?? null,
-          badgeColor: a.badge_color ?? a.badgeColor ?? null,
-          homeType: a.home_type ?? a.homeType ?? '',
-          bio: a.bio ?? '',
-          amenities: a.amenities ?? [],
-          availableFrom: a.availableFrom ?? '',
-          saved: a.saved ?? false,
-          reviews: a.reviews ?? [],
-          profilePhotoUrl: a.profile_photo?.data?.attributes?.url ?? null,
-          homePhotoUrl: a.home_photo?.data?.attributes?.url ?? null,
-          galleryPhotos: (a.gallery_photos?.data ?? []).map(p => p.attributes?.url ?? p.url).filter(Boolean),
-        };
-      });
+      const mapped = rawHosts.map(mapHost);
       dispatch({ type: 'SET_HOSTS', hosts: mapped });
     } catch {
       // API unreachable — fallback to demo data (SET_HOSTS with empty array keeps HOSTS)
