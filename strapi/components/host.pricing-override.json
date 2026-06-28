@@ -1,0 +1,29 @@
+{
+  "collectionName": "components_host_pricing_overrides",
+  "info": {
+    "displayName": "Pricing Override",
+    "icon": "calendar",
+    "description": "Date-range price override for peak/off-peak/weekend periods"
+  },
+  "options": {},
+  "attributes": {
+    "label": {
+      "type": "string",
+      "required": true,
+      "comment": "e.g. Peak season, Long weekend, Holiday"
+    },
+    "date_from": {
+      "type": "date",
+      "required": true
+    },
+    "date_to": {
+      "type": "date",
+      "required": true
+    },
+    "price_per_night": {
+      "type": "decimal",
+      "required": true,
+      "comment": "Override nightly rate in AUD for this date range"
+    }
+  }
+}
