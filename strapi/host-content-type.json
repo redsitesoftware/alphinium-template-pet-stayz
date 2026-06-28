@@ -120,6 +120,26 @@
       "component": "host.pricing-override",
       "required": false,
       "comment": "Ordered list of date-range price overrides. Base rate = price_per_night field."
+    },
+    "verified": {
+      "type": "boolean",
+      "default": false,
+      "required": false,
+      "comment": "Set to true by admin after ID check is approved"
+    },
+    "verification_status": {
+      "type": "enumeration",
+      "enum": ["unverified", "pending", "approved", "rejected"],
+      "default": "unverified",
+      "required": false,
+      "comment": "Admin workflow status for ID verification"
+    },
+    "id_document": {
+      "type": "media",
+      "multiple": false,
+      "required": false,
+      "allowedTypes": ["images", "files"],
+      "comment": "Host-uploaded ID document for admin review (private — not exposed to guests via populate)"
     }
   }
 }
