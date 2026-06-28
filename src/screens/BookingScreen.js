@@ -3,6 +3,7 @@ import { Image, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 
 import { getHostHomePhoto, getHostProfilePhoto } from '../media';
 import { useStayz } from '../store/stayzStore';
 import { colors, radius, shadows, spacing, typography } from '../theme';
+import { calculateStayPrice } from '../utils/pricing';
 
 function PetSelectorCard({ pet, selected, onSelect }) {
  return (
@@ -49,8 +50,9 @@ export default function BookingScreen() {
  }
 
  const serviceFee = 10;
- const stayTotal = host.pricePerNight * state.nights;
+ const { total: stayTotal, breakdown } = calculateStayPrice(host, state.checkIn, state.checkOut);
  const grandTotal = stayTotal + serviceFee;
+ const hasVariableRates = breakdown.some(d => d.label !== 'Standard');
 
  return (
  <ScrollView style={styles.screen} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
@@ -110,7 +112,22 @@ export default function BookingScreen() {
 
  <View style={styles.summaryBox}>
  <Text style={styles.summaryTitle}>Price summary</Text>
- <Text style={styles.summaryLine}>{state.nights} × ${host.pricePerNight} = ${stayTotal}</Text>
+ <Text style={styles.summaryLine}>
+  {state.nights} nights = ${stayTotal}{hasVariableRates ? ' (variable rates)' : ` × $${host.pricePerNight}/night`}
+ </Text>
+ {hasVariableRates && (
+  <View style={styles.rateBreakdown}>
+   {[...new Set(breakdown.map(d => d.label))].map(label => {
+    const rate = breakdown.find(d => d.label === label).rate;
+    const count = breakdown.filter(d => d.label === label).length;
+    return (
+     <Text key={label} style={styles.rateBreakdownLine}>
+      {label}: {count} night{count > 1 ? 's' : ''} × ${rate}
+     </Text>
+    );
+   })}
+  </View>
+ )}
  <Text style={styles.summaryLine}>Service fee = ${serviceFee}</Text>
  <Text style={styles.summaryTotal}>Total = ${grandTotal}</Text>
  </View>
@@ -132,7 +149,22 @@ export default function BookingScreen() {
 
  <View style={styles.summaryBox}>
  <Text style={styles.summaryTitle}>Price summary</Text>
- <Text style={styles.summaryLine}>{state.nights} × ${host.pricePerNight} = ${stayTotal}</Text>
+ <Text style={styles.summaryLine}>
+  {state.nights} nights = ${stayTotal}{hasVariableRates ? ' (variable rates)' : ` × $${host.pricePerNight}/night`}
+ </Text>
+ {hasVariableRates && (
+  <View style={styles.rateBreakdown}>
+   {[...new Set(breakdown.map(d => d.label))].map(label => {
+    const rate = breakdown.find(d => d.label === label).rate;
+    const count = breakdown.filter(d => d.label === label).length;
+    return (
+     <Text key={label} style={styles.rateBreakdownLine}>
+      {label}: {count} night{count > 1 ? 's' : ''} × ${rate}
+     </Text>
+    );
+   })}
+  </View>
+ )}
  <Text style={styles.summaryLine}>Service fee = ${serviceFee}</Text>
  <Text style={styles.summaryTotal}>Confirm & Pay ${grandTotal}</Text>
  </View>
@@ -295,6 +327,14 @@ const styles = StyleSheet.create({
  fontWeight: '800',
  fontSize: 18,
  marginTop: spacing.xs,
+ },
+ rateBreakdown: {
+ marginTop: 4,
+ paddingLeft: 8,
+ },
+ rateBreakdownLine: {
+ fontSize: 12,
+ color: '#666',
  },
  primaryButton: {
  backgroundColor: colors.primary,
