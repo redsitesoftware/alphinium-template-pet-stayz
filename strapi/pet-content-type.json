@@ -1,0 +1,72 @@
+{
+  "kind": "collectionType",
+  "collectionName": "pets",
+  "info": {
+    "singularName": "pet",
+    "pluralName": "pets",
+    "displayName": "Pet",
+    "description": "Guest pet profiles — linked to authenticated users. Enables POST /api/pets and GET /api/pets/me."
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "pluginsOptions": {
+    "users-permissions": {
+      "enabled": true
+    }
+  },
+  "attributes": {
+    "name": {
+      "type": "string",
+      "required": true,
+      "comment": "Pet name"
+    },
+    "species": {
+      "type": "string",
+      "required": true,
+      "comment": "e.g. Dog, Cat"
+    },
+    "breed": {
+      "type": "string"
+    },
+    "age": {
+      "type": "decimal",
+      "comment": "Age in years"
+    },
+    "weight": {
+      "type": "decimal",
+      "comment": "Weight in kg"
+    },
+    "temperament": {
+      "type": "text",
+      "comment": "Free-text description of temperament"
+    },
+    "vaccinations": {
+      "type": "text",
+      "comment": "Vaccination history and notes"
+    },
+    "vet_name": {
+      "type": "string"
+    },
+    "vet_phone": {
+      "type": "string"
+    },
+    "special_care_notes": {
+      "type": "text",
+      "comment": "Medications, allergies, and other special requirements"
+    },
+    "photos": {
+      "type": "media",
+      "multiple": true,
+      "required": false,
+      "allowedTypes": ["images"]
+    },
+    "owner": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "plugin::users-permissions.user",
+      "inversedBy": "pets",
+      "comment": "Links pet to authenticated user — used by /api/pets/me filtering"
+    }
+  }
+}
