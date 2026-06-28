@@ -1,0 +1,62 @@
+{
+  "kind": "collectionType",
+  "collectionName": "bookings",
+  "info": {
+    "singularName": "booking",
+    "pluralName": "bookings",
+    "displayName": "Booking",
+    "description": "Guest booking requests against a host listing. Drives the accept/decline flow (issue #6). Status transitions: pending → accepted | declined."
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "pluginsOptions": {
+    "users-permissions": {
+      "enabled": true
+    }
+  },
+  "attributes": {
+    "check_in": {
+      "type": "date",
+      "required": true,
+      "comment": "Requested check-in date (inclusive)"
+    },
+    "check_out": {
+      "type": "date",
+      "required": true,
+      "comment": "Requested check-out date (inclusive)"
+    },
+    "pet_ids": {
+      "type": "json",
+      "comment": "Array of pet IDs selected by the guest at booking time"
+    },
+    "message": {
+      "type": "text",
+      "comment": "Optional guest message to the host"
+    },
+    "status": {
+      "type": "enumeration",
+      "enum": ["pending", "accepted", "declined"],
+      "default": "pending",
+      "required": true,
+      "comment": "Booking status — set by host via PATCH /api/bookings/:id. Drives the accept/decline flow from issue #6."
+    },
+    "total_price": {
+      "type": "decimal",
+      "required": false,
+      "comment": "Pre-calculated total cost in AUD at POST time using pricing_overrides from the host record (issue #14). Stored — not recomputed on read."
+    },
+    "host": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::host.host",
+      "comment": "Host being booked"
+    },
+    "guest": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "plugin::users-permissions.user",
+      "comment": "Authenticated guest user making the booking"
+    }
+  }
+}
