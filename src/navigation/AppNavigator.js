@@ -4,6 +4,7 @@ import LoginScreen from '../screens/LoginScreen';
 import HomeScreen from '../screens/HomeScreen';
 import HostScreen from '../screens/HostScreen';
 import BookingScreen from '../screens/BookingScreen';
+import PetsScreen from '../screens/PetsScreen';
 import { useStayz } from '../store/stayzStore';
 import { colors } from '../theme';
 
@@ -20,6 +21,7 @@ export default function AppNavigator() {
       {(state.phase === 'home' || state.phase === 'search') && <HomeScreen />}
       {state.phase === 'host' && <HostScreen />}
       {state.phase === 'booking' && <BookingScreen />}
+      {state.phase === 'pets' && <PetsScreen />}
     </View>
   );
 }

@@ -96,9 +96,14 @@ export default function HomeScreen() {
  <Text style={styles.logo}> Pet Stayz</Text>
  <Text style={styles.subtitle}>Where pets love to stay</Text>
  </View>
- <Pressable style={styles.savedBadge} onPress={() => dispatch({ type: 'FILTER_SAVED' })}>
+ <View style={styles.headerActions}>
+  <Pressable style={styles.petsButton} onPress={() => dispatch({ type: 'SET_PHASE', phase: 'pets' })}>
+  <Text style={styles.petsButtonText}>🐾 My Pets</Text>
+  </Pressable>
+  <Pressable style={styles.savedBadge} onPress={() => dispatch({ type: 'FILTER_SAVED' })}>
  <Text style={styles.savedBadgeText}>️ {savedCount}</Text>
  </Pressable>
+ </View>
  </View>
 
  <Pressable
@@ -268,6 +273,22 @@ const styles = StyleSheet.create({
  savedBadgeText: {
  color: colors.accent,
  fontWeight: '800',
+ },
+ headerActions: {
+ flexDirection: 'row',
+ alignItems: 'center',
+ gap: spacing.xs,
+ },
+ petsButton: {
+ backgroundColor: colors.softOrange,
+ paddingHorizontal: spacing.sm,
+ paddingVertical: 8,
+ borderRadius: radius.round,
+ },
+ petsButtonText: {
+ color: colors.primary,
+ fontWeight: '700',
+ fontSize: 13,
  },
  searchBar: {
  backgroundColor: colors.bg,

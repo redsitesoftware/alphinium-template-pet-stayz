@@ -223,7 +223,7 @@ const initialState = {
  checkOut: 'Mon 9 June',
  nights: 3,
  petSummary: '1 dog · Medium',
- bookingData: { petName: '', breed: '', age: '', size: 'Medium', specialNeeds: '', notes: '' },
+ bookingData: { petId: null, petName: '', breed: '', age: '', size: 'Medium', specialNeeds: '', notes: '' },
  bookingStep: 0,
 };
 
