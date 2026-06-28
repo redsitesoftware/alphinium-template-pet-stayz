@@ -18,7 +18,6 @@ const HOSTS = [
  amenities: [' Large fenced garden', '️ Dog sleeps on bed', ' Own bathroom/shower area', ' Daily park visits', ' Daily photo updates'],
  availableFrom: 'Tonight',
  saved: true,
- latitude: -33.8269, longitude: 151.2439,
  verified: true,
  reviews: [
  { name: 'Emma K.', stars: 5, text: 'Sarah and Tom are absolute legends. Bella had the time of her life!' },
@@ -38,7 +37,6 @@ const HOSTS = [
  amenities: [' Vet nurse background', ' Walks twice daily', ' Cats welcome', ' Morning & evening updates'],
  availableFrom: 'Today',
  saved: false,
- latitude: -33.8979, longitude: 151.1795,
  verified: false,
  reviews: [
  { name: 'Priya S.', stars: 5, text: 'Jessica is incredible. My cat actually seemed sad to come home!' },
@@ -57,7 +55,6 @@ const HOSTS = [
  amenities: ['️ Beach walks daily', ' Large backyard', ' Work from home — never alone', ' 3 friendly resident dogs'],
  availableFrom: 'This weekend',
  saved: true,
- latitude: -33.7969, longitude: 151.285,
  verified: true,
  reviews: [
  { name: 'Tom A.', stars: 5, text: 'My dog went to the beach every day. I think he prefers Marcus to me now ' },
@@ -76,7 +73,6 @@ const HOSTS = [
  amenities: [' Small pets specialist', ' Hourly updates', ' Lots of play time'],
  availableFrom: 'Today',
  saved: false,
- latitude: -33.8867, longitude: 151.2094,
  verified: false,
  reviews: [],
  },
@@ -93,7 +89,6 @@ const HOSTS = [
  amenities: [' Webcam access', ' 2-acre property', ' Dog pool', ' Medication management', ' Vet on call'],
  availableFrom: 'Tonight',
  saved: false,
- latitude: -33.7635, longitude: 151.139,
  verified: true,
  reviews: [
  { name: 'Rachel T.', stars: 5, text: 'Best facility we have found. Webcam access means I never worry.' },
@@ -112,7 +107,6 @@ const HOSTS = [
  amenities: [' 2 friendly resident labs', ' Fully fenced yard', ' Bathed before pickup'],
  availableFrom: 'Tomorrow',
  saved: false,
- latitude: -33.862, longitude: 151.18,
  verified: false,
  reviews: [],
  },
@@ -129,7 +123,6 @@ const HOSTS = [
  amenities: [' Coastal walks', ' Enrichment games', ' Work from home', ' Live photo journal'],
  availableFrom: 'Tomorrow',
  saved: false,
- latitude: -33.8915, longitude: 151.2767,
  verified: false,
  reviews: [
  { name: 'Leah P.', stars: 5, text: 'Every update felt premium. Our lab came back calm and very loved.' },
@@ -148,7 +141,6 @@ const HOSTS = [
  amenities: [' Sunny courtyard', ' Rabbit-friendly routines', ' Pickup available', ' Daily updates'],
  availableFrom: 'Tonight',
  saved: false,
- latitude: -37.8148, longitude: 144.9963,
  verified: false,
  reviews: [
  { name: 'Mia J.', stars: 5, text: 'Oliver made our rescue dog feel safe immediately.' },
@@ -167,7 +159,6 @@ const HOSTS = [
  amenities: [' Separate cat suite', ' Secure play yard', ' Video check-ins', ' Medication support'],
  availableFrom: 'Today',
  saved: false,
- latitude: -32.0569, longitude: 115.747,
  verified: false,
  reviews: [
  { name: 'Sophie R.', stars: 5, text: 'The perfect balance of professional and homey.' },
@@ -187,7 +178,6 @@ const HOSTS = [
  amenities: [' Gentle kids used to dogs', ' Three walks daily', '️ Couch cuddles welcome', ' Bedtime photo updates'],
  availableFrom: 'This weekend',
  saved: false,
- latitude: -33.8848, longitude: 151.2268,
  verified: false,
  reviews: [
  { name: 'Chris W.', stars: 5, text: 'Our cavoodle adored staying with the Harper family.' },
@@ -206,7 +196,6 @@ const HOSTS = [
  amenities: ['️ Luxury bedding', ' Premium meal prep', ' Concierge-style updates', ' Grooming add-ons'],
  availableFrom: 'Tomorrow',
  saved: false,
- latitude: -37.8389, longitude: 144.9894,
  verified: false,
  reviews: [
  { name: 'Anita L.', stars: 5, text: 'This is honestly a boutique hotel for pets.' },
@@ -225,7 +214,6 @@ const HOSTS = [
  amenities: [' Rooftop exercise area', '⏰ Extended pickup hours', ' Small pet safe room', ' Midday updates'],
  availableFrom: 'Today',
  saved: false,
- latitude: -27.4579, longitude: 153.0326,
  verified: false,
  reviews: [
  { name: 'Kylie N.', stars: 5, text: 'Exactly what we needed for weekday daycare.' },
@@ -279,19 +267,15 @@ function sortHosts(hosts, sortBy) {
 function getFilteredHosts(state) {
  const query = state.searchText.trim().toLowerCase();
 
- const filtered = state.hosts.filter((host) => {
-  if (state.filters.savedOnly && !host.saved) return false;
-  if (state.filters.verifiedOnly && !host.verified) return false;
-  if (state.filters.type !== 'All' && !host.type.includes(state.filters.type)) return false;
-  if (state.filters.petType !== 'All' && !host.petTypes.includes(state.filters.petType)) return false;
-  if (state.filters.priceMax !== 'Any' && host.pricePerNight > Number(state.filters.priceMax)) return false;
-  if (!matchesSize(state.filters.size, host)) return false;
-  if (!query) return true;
-  return [host.name, host.suburb, host.homeType, host.badge || '', host.bio, host.type.join(' '), host.petTypes.join(' ')]
-   .join(' ')
-   .toLowerCase()
-   .includes(query);
- });
+ return sortHosts(
+ state.hosts.filter((host) => {
+ if (state.filters.savedOnly && !host.saved) return false;
+ if (state.filters.verifiedOnly && !host.verified) return false;
+ if (state.filters.type !== 'All' && !host.type.includes(state.filters.type)) return false;
+ if (state.filters.petType !== 'All' && !host.petTypes.includes(state.filters.petType)) return false;
+ if (state.filters.priceMax !== 'Any' && host.pricePerNight > Number(state.filters.priceMax)) return false;
+ if (!matchesSize(state.filters.size, host)) return false;
+ if (!query) return true;
 
  if (state.filters.sortBy === 'Distance' && state.userLocation) {
   return sortByDistance(filtered, state.userLocation.lat, state.userLocation.lng);
