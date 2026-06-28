@@ -30,3 +30,17 @@ npx expo start --web --port 8105
 - `src/screens/HostScreen.js`
 - `src/screens/BookingScreen.js`
 - `GOING_LIVE.md`
+
+## Configuration — Environment Variables
+
+Copy `.env.example` to `.env` and set values for your deployment.
+
+| Variable | Description | Default | Notes |
+|---|---|---|---|
+| `EXPO_PUBLIC_API_URL` | Strapi backend URL | _(empty)_ | e.g. `http://localhost:1337` for local dev |
+| `EXPO_PUBLIC_API_TOKEN` | Strapi bearer token | _(empty)_ | Only needed if Strapi content is restricted |
+| `EXPO_PUBLIC_GA_ID` | GA4 Measurement ID | `G-X09N3J8X17` | Override with your own GA property when going live |
+| `EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY` | Stripe publishable key | `pk_test_REPLACE_ME` | Replace with your Stripe test or live key |
+| `EXPO_PUBLIC_APP_NAME` | App display name | `PetStayz` | Set at project creation by Alphinium Forge |
+| `EXPO_PUBLIC_APP_SCHEME` | Deep link scheme | `petstayz` | Must match `app.json > scheme` |
+| `EXPO_PUBLIC_OAUTH_PROVIDERS` | Enabled login providers | `github,google,email` | Comma-separated: `github`, `google`, `facebook`, `email` |
