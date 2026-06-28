@@ -42,6 +42,7 @@ export function mapHost(item) {
     })),
     latitude: a.latitude ?? null,
     longitude: a.longitude ?? null,
+    verified: a.verified ?? false,
   };
 }
 
