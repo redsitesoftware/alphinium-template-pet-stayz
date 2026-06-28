@@ -21,9 +21,24 @@ export default function HostScreen() {
 
  <View style={styles.heroCard}>
  <View style={styles.heroBanner}>
- <Image source={{ uri: getHostHomePhoto(host.id) }} style={styles.heroImage} />
- <Image source={{ uri: getHostProfilePhoto(host.id) }} style={styles.heroAvatar} />
+ <Image source={{ uri: getHostHomePhoto(host) }} style={styles.heroImage} />
+ <Image source={{ uri: getHostProfilePhoto(host) }} style={styles.heroAvatar} />
  </View>
+
+ {host.galleryPhotos?.length > 0 && (
+ <View style={styles.galleryContainer}>
+ <Text style={styles.galleryLabel}>Photos</Text>
+ <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+ {host.galleryPhotos.map((url, i) => (
+ <Image
+ key={i}
+ source={{ uri: url }}
+ style={styles.galleryThumb}
+ />
+ ))}
+ </ScrollView>
+ </View>
+ )}
 
  <View style={styles.heroBody}>
  <View style={styles.heroHeader}>
@@ -105,6 +120,23 @@ const styles = StyleSheet.create({
  heroImage: {
  width: '100%',
  height: 240,
+ },
+ galleryContainer: {
+ marginVertical: 12,
+ paddingHorizontal: 16,
+ },
+ galleryLabel: {
+ fontSize: 16,
+ fontWeight: '600',
+ marginBottom: 8,
+ color: '#333',
+ },
+ galleryThumb: {
+ width: 120,
+ height: 90,
+ borderRadius: 8,
+ marginRight: 8,
+ backgroundColor: '#eee',
  },
  heroAvatar: {
  position: 'absolute',
