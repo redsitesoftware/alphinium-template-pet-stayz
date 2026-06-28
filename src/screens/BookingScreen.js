@@ -4,6 +4,26 @@ import { getHostHomePhoto, getHostProfilePhoto } from '../media';
 import { useStayz } from '../store/stayzStore';
 import { colors, radius, shadows, spacing, typography } from '../theme';
 
+function PetSelectorCard({ pet, selected, onSelect }) {
+ return (
+ <Pressable
+  style={[styles.petSelectorCard, selected && styles.petSelectorCardActive]}
+  onPress={() => onSelect(pet)}
+ >
+  <Text style={styles.petSelectorEmoji}>🐾</Text>
+  <View style={styles.petSelectorBody}>
+  <Text style={[styles.petSelectorName, selected && styles.petSelectorNameActive]}>{pet.name}</Text>
+  <Text style={styles.petSelectorMeta}>
+   {pet.species}{pet.breed ? ` · ${pet.breed}` : ''}
+   {pet.age ? ` · ${pet.age}yr` : ''}
+   {pet.weight ? ` · ${pet.weight}kg` : ''}
+  </Text>
+  </View>
+  {selected && <Text style={styles.petSelectorCheck}>✓</Text>}
+ </Pressable>
+ );
+}
+
 function BookingInput({ label, value, onChangeText, multiline }) {
  return (
  <View style={styles.inputGroup}>
@@ -49,6 +69,38 @@ export default function BookingScreen() {
 
  {state.bookingStep === 0 && (
  <View style={styles.card}>
+ {/* Pet selector: shown when user has saved pets */}
+ {state.pets && state.pets.length > 0 ? (
+  <>
+  <Text style={styles.sectionTitle}>Choose a pet</Text>
+  {state.pets.map((pet) => (
+   <PetSelectorCard
+   key={pet.id}
+   pet={pet}
+   selected={state.bookingData.petId === pet.id}
+   onSelect={(p) => dispatch({
+    type: 'UPDATE_BOOKING_FIELD', key: 'petId', value: p.id,
+   }) || [
+    ['petName', p.name],
+    ['breed', p.breed ?? ''],
+    ['age', p.age ? String(p.age) : ''],
+    ['size', p.weight ? (p.weight > 25 ? 'Large' : p.weight > 10 ? 'Medium' : 'Small') : 'Medium'],
+    ['specialNeeds', p.specialCareNotes ?? ''],
+   ].forEach(([key, value]) => dispatch({ type: 'UPDATE_BOOKING_FIELD', key, value }))}
+   />
+  ))}
+  <Pressable onPress={() => dispatch({ type: 'SET_PHASE', phase: 'pets' })}>
+  <Text style={styles.managePetsLink}>+ Manage / add pets</Text>
+  </Pressable>
+  <View style={styles.divider} />
+  <Text style={styles.orLabel}>Or enter details manually</Text>
+  </>
+ ) : (
+  <Pressable onPress={() => dispatch({ type: 'SET_PHASE', phase: 'pets' })}>
+  <Text style={styles.managePetsLink}>+ Save a pet profile for faster booking</Text>
+  </Pressable>
+ )}
+
  <BookingInput label="Pet name" value={state.bookingData.petName} onChangeText={(value) => dispatch({ type: 'UPDATE_BOOKING_FIELD', key: 'petName', value })} />
  <BookingInput label="Breed" value={state.bookingData.breed} onChangeText={(value) => dispatch({ type: 'UPDATE_BOOKING_FIELD', key: 'breed', value })} />
  <BookingInput label="Age" value={state.bookingData.age} onChangeText={(value) => dispatch({ type: 'UPDATE_BOOKING_FIELD', key: 'age', value })} />
@@ -127,6 +179,29 @@ export default function BookingScreen() {
 }
 
 const styles = StyleSheet.create({
+ petSelectorCard: {
+ flexDirection: 'row',
+ alignItems: 'center',
+ backgroundColor: colors.chip,
+ borderRadius: radius.md,
+ padding: spacing.sm,
+ marginBottom: spacing.xs,
+ borderWidth: 1.5,
+ borderColor: colors.border,
+ },
+ petSelectorCardActive: {
+ borderColor: colors.primary,
+ backgroundColor: colors.softOrange,
+ },
+ petSelectorEmoji: { fontSize: 22, marginRight: spacing.sm },
+ petSelectorBody: { flex: 1 },
+ petSelectorName: { fontSize: 15, fontWeight: '700', color: colors.text },
+ petSelectorNameActive: { color: colors.primary },
+ petSelectorMeta: { fontSize: 13, color: colors.textMuted },
+ petSelectorCheck: { fontSize: 18, color: colors.primary, fontWeight: '800' },
+ managePetsLink: { color: colors.primary, fontWeight: '600', fontSize: 14, marginBottom: spacing.sm },
+ divider: { height: 1, backgroundColor: colors.border, marginVertical: spacing.sm },
+ orLabel: { color: colors.textMuted, fontSize: 13, fontWeight: '600', marginBottom: spacing.sm },
  screen: {
  flex: 1,
  backgroundColor: colors.bg,
