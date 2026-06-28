@@ -53,6 +53,9 @@ export default function HostScreen() {
  </View>
 
  {host.badge ? <Text style={[styles.badge, { backgroundColor: host.badgeColor }]}> {host.badge}</Text> : null}
+ {host.verified && (
+  <Text style={styles.verifiedBadge}>✓ ID Verified</Text>
+ )}
  <Text style={styles.homeType}>{host.homeType}</Text>
  <Text style={styles.bio}>{host.bio}</Text>
 
@@ -180,6 +183,12 @@ const styles = StyleSheet.create({
  overflow: 'hidden',
  fontWeight: '800',
  marginTop: spacing.md,
+ },
+ verifiedBadge: {
+ fontSize: 12,
+ color: '#16A34A',
+ fontWeight: '700',
+ marginTop: 4,
  },
  homeType: {
  marginTop: spacing.md,
