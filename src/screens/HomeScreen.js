@@ -36,6 +36,9 @@ function HostCard({ host, nights, onView, onToggleSaved, userLocation }) {
  <View style={styles.hostHeaderRow}>
  {host.badge ? <Text style={[styles.badge, { backgroundColor: host.badgeColor }]}>{host.badge}</Text> : <View />}
  </View>
+ {host.verified && (
+  <Text style={styles.verifiedBadge}>✓ Verified</Text>
+ )}
 
  <Text style={styles.hostName}>{host.name}</Text>
  <Text style={styles.meta}> {host.suburb} · {displayDistance}km</Text>
@@ -213,6 +216,15 @@ export default function HomeScreen() {
  />
  ))}
  </ScrollView>
+
+ <Text style={styles.filterLabel}>Verified</Text>
+ <View style={styles.filterRow}>
+  <FilterPill
+  label="Verified ✓"
+  active={state.filters.verifiedOnly}
+  onPress={() => dispatch({ type: 'UPDATE_FILTER', key: 'verifiedOnly', value: !state.filters.verifiedOnly })}
+  />
+ </View>
  </View>
 
  <View style={styles.resultsRow}>
@@ -554,6 +566,16 @@ const styles = StyleSheet.create({
  paddingVertical: 6,
  borderRadius: radius.round,
  overflow: 'hidden',
+ },
+ verifiedBadge: {
+ fontSize: 11,
+ color: '#16A34A',
+ fontWeight: '600',
+ marginTop: 2,
+ },
+ filterRow: {
+ flexDirection: 'row',
+ flexWrap: 'wrap',
  },
  hostName: {
  marginTop: spacing.sm,

@@ -19,6 +19,7 @@ const HOSTS = [
  availableFrom: 'Tonight',
  saved: true,
  latitude: -33.8269, longitude: 151.2439,
+ verified: true,
  reviews: [
  { name: 'Emma K.', stars: 5, text: 'Sarah and Tom are absolute legends. Bella had the time of her life!' },
  { name: 'James M.', stars: 5, text: 'Best boarding experience ever. Daily photos, updates, and a very happy dog.' },
@@ -38,6 +39,7 @@ const HOSTS = [
  availableFrom: 'Today',
  saved: false,
  latitude: -33.8979, longitude: 151.1795,
+ verified: false,
  reviews: [
  { name: 'Priya S.', stars: 5, text: 'Jessica is incredible. My cat actually seemed sad to come home!' },
  ],
@@ -56,6 +58,7 @@ const HOSTS = [
  availableFrom: 'This weekend',
  saved: true,
  latitude: -33.7969, longitude: 151.285,
+ verified: true,
  reviews: [
  { name: 'Tom A.', stars: 5, text: 'My dog went to the beach every day. I think he prefers Marcus to me now ' },
  ],
@@ -74,6 +77,7 @@ const HOSTS = [
  availableFrom: 'Today',
  saved: false,
  latitude: -33.8867, longitude: 151.2094,
+ verified: false,
  reviews: [],
  },
  {
@@ -90,6 +94,7 @@ const HOSTS = [
  availableFrom: 'Tonight',
  saved: false,
  latitude: -33.7635, longitude: 151.139,
+ verified: true,
  reviews: [
  { name: 'Rachel T.', stars: 5, text: 'Best facility we have found. Webcam access means I never worry.' },
  ],
@@ -108,6 +113,7 @@ const HOSTS = [
  availableFrom: 'Tomorrow',
  saved: false,
  latitude: -33.862, longitude: 151.18,
+ verified: false,
  reviews: [],
  },
  {
@@ -124,6 +130,7 @@ const HOSTS = [
  availableFrom: 'Tomorrow',
  saved: false,
  latitude: -33.8915, longitude: 151.2767,
+ verified: false,
  reviews: [
  { name: 'Leah P.', stars: 5, text: 'Every update felt premium. Our lab came back calm and very loved.' },
  ],
@@ -142,6 +149,7 @@ const HOSTS = [
  availableFrom: 'Tonight',
  saved: false,
  latitude: -37.8148, longitude: 144.9963,
+ verified: false,
  reviews: [
  { name: 'Mia J.', stars: 5, text: 'Oliver made our rescue dog feel safe immediately.' },
  ],
@@ -160,6 +168,7 @@ const HOSTS = [
  availableFrom: 'Today',
  saved: false,
  latitude: -32.0569, longitude: 115.747,
+ verified: false,
  reviews: [
  { name: 'Sophie R.', stars: 5, text: 'The perfect balance of professional and homey.' },
  { name: 'Dan H.', stars: 5, text: 'Their cat setup is better than most catteries.' },
@@ -179,6 +188,7 @@ const HOSTS = [
  availableFrom: 'This weekend',
  saved: false,
  latitude: -33.8848, longitude: 151.2268,
+ verified: false,
  reviews: [
  { name: 'Chris W.', stars: 5, text: 'Our cavoodle adored staying with the Harper family.' },
  ],
@@ -197,6 +207,7 @@ const HOSTS = [
  availableFrom: 'Tomorrow',
  saved: false,
  latitude: -37.8389, longitude: 144.9894,
+ verified: false,
  reviews: [
  { name: 'Anita L.', stars: 5, text: 'This is honestly a boutique hotel for pets.' },
  ],
@@ -215,6 +226,7 @@ const HOSTS = [
  availableFrom: 'Today',
  saved: false,
  latitude: -27.4579, longitude: 153.0326,
+ verified: false,
  reviews: [
  { name: 'Kylie N.', stars: 5, text: 'Exactly what we needed for weekday daycare.' },
  ],
@@ -231,7 +243,7 @@ const initialState = {
  selectedHost: null,
  hosts: HOSTS,
  hostsLoading: false,
- filters: { type: 'All', petType: 'All', priceMax: 'Any', sortBy: 'Distance', size: 'Any', savedOnly: false },
+ filters: { type: 'All', petType: 'All', priceMax: 'Any', sortBy: 'Distance', size: 'Any', savedOnly: false, verifiedOnly: false },
  searchText: '',
  checkIn: 'Fri 6 June',
  checkOut: 'Mon 9 June',
@@ -273,6 +285,15 @@ function getFilteredHosts(state) {
   if (state.filters.priceMax !== 'Any' && host.pricePerNight > Number(state.filters.priceMax)) return false;
   if (!matchesSize(state.filters.size, host)) return false;
   if (!query) return true;
+ return sortHosts(
+ state.hosts.filter((host) => {
+ if (state.filters.savedOnly && !host.saved) return false;
+ if (state.filters.verifiedOnly && !host.verified) return false;
+ if (state.filters.type !== 'All' && !host.type.includes(state.filters.type)) return false;
+ if (state.filters.petType !== 'All' && !host.petTypes.includes(state.filters.petType)) return false;
+ if (state.filters.priceMax !== 'Any' && host.pricePerNight > Number(state.filters.priceMax)) return false;
+ if (!matchesSize(state.filters.size, host)) return false;
+ if (!query) return true;
 
   return [host.name, host.suburb, host.homeType, host.badge || '', host.bio, host.type.join(' '), host.petTypes.join(' ')]
   .join(' ')
