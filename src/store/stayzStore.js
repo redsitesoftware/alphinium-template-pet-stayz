@@ -1,5 +1,6 @@
-import React, { createContext, useCallback, useContext, useMemo, useReducer } from 'react';
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useReducer } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { getMyPets } from '../services/PetService';
 
 const HOSTS = [
  {
@@ -223,6 +224,8 @@ const initialState = {
  petSummary: '1 dog · Medium',
  bookingData: { petName: '', breed: '', age: '', size: 'Medium', specialNeeds: '', notes: '' },
  bookingStep: 0,
+ pets: [],
+ petsLoading: false,
 };
 
 const StayzContext = createContext(null);
@@ -306,6 +309,12 @@ function reducer(state, action) {
  return { ...state, bookingStep: Math.min(state.bookingStep + 1, 2) };
  case 'PREV_BOOKING_STEP':
  return { ...state, bookingStep: Math.max(state.bookingStep - 1, 0) };
+ case 'SET_PETS':
+ return { ...state, pets: action.pets, petsLoading: false };
+ case 'ADD_PET':
+ return { ...state, pets: [...state.pets, action.pet] };
+ case 'SET_PETS_LOADING':
+ return { ...state, petsLoading: action.loading };
  case 'RESET_BOOKING':
  return { ...state, bookingStep: 0, bookingData: initialState.bookingData, phase: 'home', selectedHost: null };
  case 'LOGOUT':
@@ -317,6 +326,43 @@ function reducer(state, action) {
 
 export function StayzProvider({ children }) {
   const [state, dispatch] = useReducer(reducer, initialState);
+
+  const loadMyPets = useCallback(async (authToken) => {
+    if (!authToken) return;
+    dispatch({ type: 'SET_PETS_LOADING', loading: true });
+    try {
+      const rawPets = await getMyPets(authToken);
+      const pets = rawPets.map((item) => {
+        const a = item.attributes ?? item;
+        return {
+          id: item.id ? `api-${item.id}` : a.id,
+          name: a.name ?? '',
+          species: a.species ?? '',
+          breed: a.breed ?? '',
+          age: a.age ?? null,
+          weight: a.weight ?? null,
+          temperament: a.temperament ?? '',
+          vaccinations: a.vaccinations ?? '',
+          vetName: a.vet_name ?? a.vetName ?? '',
+          vetPhone: a.vet_phone ?? a.vetPhone ?? '',
+          specialCareNotes: a.special_care_notes ?? a.specialCareNotes ?? '',
+          photos: a.photos?.data ?? a.photos ?? [],
+        };
+      });
+      dispatch({ type: 'SET_PETS', pets });
+    } catch {
+      // API unreachable — silently keep empty pets array, no crash
+      dispatch({ type: 'SET_PETS_LOADING', loading: false });
+    }
+  }, []);
+
+  // Load pets whenever authToken is set (login / session restore)
+  useEffect(() => {
+    if (state.authToken) {
+      loadMyPets(state.authToken);
+    }
+  }, [state.authToken, loadMyPets]);
+
   const logout = useCallback(async () => {
     try {
       await AsyncStorage.removeItem(JWT_KEY);
@@ -329,8 +375,8 @@ export function StayzProvider({ children }) {
   const filteredHosts = getFilteredHosts(state);
   const savedCount = state.hosts.filter((host) => host.saved).length;
   const featuredHosts = state.hosts.filter((host) => host.badge === 'Superhost');
-  return { state, dispatch, logout, filteredHosts, savedCount, featuredHosts };
-  }, [logout, state]);
+  return { state, dispatch, logout, loadMyPets, filteredHosts, savedCount, featuredHosts };
+  }, [loadMyPets, logout, state]);
 
   return <StayzContext.Provider value={value}>{children}</StayzContext.Provider>;
 }
