@@ -65,7 +65,31 @@ export async function createBooking(bookingData, authToken) {
 }
 
 /**
- * PATCH /api/bookings/:id — host accept/decline (requires auth token).
+ * POST /api/bookings/:id/pay — initiate Stripe Checkout for a booking.
+ * Returns { checkoutUrl } — the Stripe-hosted payment URL to open in the browser.
+ *
+ * @param {string|number} bookingId
+ * @param {string} authToken
+ * @returns {Promise<{ checkoutUrl: string }>}
+ */
+export async function pay(bookingId, authToken) {
+  const id = toStrapiId(bookingId);
+  const response = await fetch(`${STRAPI_URL}/api/bookings/${id}/pay`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${authToken}`,
+    },
+  });
+
+  if (!response.ok) {
+    const body = await response.json().catch(() => ({}));
+    const msg =
+      body?.error?.message ?? `Failed to initiate payment: HTTP ${response.status}`;
+    throw new Error(msg);
+  }
+
+  return response.json(); // { checkoutUrl }
+}
  *
  * @param {string|number} bookingId
  * @param {'accepted'|'declined'} status

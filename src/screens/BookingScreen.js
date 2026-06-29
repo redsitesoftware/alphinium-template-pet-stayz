@@ -1,8 +1,9 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { ActivityIndicator, Image, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { ActivityIndicator, Alert, Image, Linking, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { getHostHomePhoto, getHostProfilePhoto } from '../media';
 import { useAuth } from '../hooks/useAuth';
-import { createBooking, getAvailability } from '../services/BookingService';
+import { usePaymentDeepLink } from '../hooks/usePaymentDeepLink';
+import { createBooking, getAvailability, pay as initiatePayment } from '../services/BookingService';
 import { useStayz } from '../store/stayzStore';
 import { colors, radius, shadows, spacing, typography } from '../theme';
 import { calculateStayPrice } from '../utils/pricing';
@@ -53,6 +54,32 @@ export default function BookingScreen() {
  const [availabilityWarning, setAvailabilityWarning] = useState(null);
  const [submitting, setSubmitting] = useState(false);
  const [submitError, setSubmitError] = useState(null);
+
+ // ── Payment state ──────────────────────────────────────────────────────────
+ const [paying, setPaying] = useState(false);
+ const [payError, setPayError] = useState(null);
+ // Local payment status mirrors bookingConfirmation.payment_status; updated
+ // on deep-link return so the UI reflects paid/cancelled without a full refresh.
+ const [paymentStatus, setPaymentStatus] = useState(
+  state.bookingConfirmation?.payment_status ?? 'unpaid'
+ );
+ const [paymentMessage, setPaymentMessage] = useState(null);
+
+ // ── Deep link handling ─────────────────────────────────────────────────────
+ const { deepLink, clearDeepLink } = usePaymentDeepLink();
+
+ useEffect(() => {
+  if (!deepLink.type) return;
+
+  if (deepLink.type === 'success') {
+   setPaymentStatus('paid');
+   setPaymentMessage('✅ Payment successful! Your booking is confirmed and paid.');
+  } else if (deepLink.type === 'cancel') {
+   setPaymentMessage('ℹ️ Payment cancelled. You can try again when ready.');
+  }
+
+  clearDeepLink();
+ }, [deepLink, clearDeepLink]);
 
  // ── Derive ISO date strings from store display strings ─────────────────────
  // checkIn/checkOut in store are display strings like "Fri 6 June".
@@ -143,6 +170,31 @@ export default function BookingScreen() {
    setSubmitError(err.message ?? 'Something went wrong. Please try again.');
   } finally {
    setSubmitting(false);
+  }
+ }
+
+ // ── 3. Initiate Stripe Checkout ────────────────────────────────────────────
+ async function handlePay() {
+  const bookingId = state.bookingConfirmation?.id;
+  if (!bookingId) return;
+
+  setPayError(null);
+  setPaying(true);
+  try {
+   const result = await initiatePayment(bookingId, authToken);
+   const checkoutUrl = result?.checkoutUrl ?? result?.checkout_url;
+   if (!checkoutUrl) throw new Error('No checkout URL returned.');
+
+   const canOpen = await Linking.canOpenURL(checkoutUrl).catch(() => false);
+   if (!canOpen) throw new Error('Unable to open payment page.');
+
+   await Linking.openURL(checkoutUrl);
+   // Optimistically set to pending while Stripe session is open
+   setPaymentStatus('pending');
+  } catch (err) {
+   setPayError(err.message ?? 'Unable to open payment page. Please try again.');
+  } finally {
+   setPaying(false);
   }
  }
 
@@ -303,12 +355,53 @@ export default function BookingScreen() {
  <Text style={styles.confirmTitle}>{host.name}</Text>
  <Text style={styles.confirmLine}>{state.checkIn} – {state.checkOut} · {state.nights} nights</Text>
  <Text style={styles.confirmLine}>Pet: {state.bookingData.petName || 'Your pet'} ({state.bookingData.breed || 'Breed'})</Text>
- <Text style={styles.confirmLine}>Total paid: ${state.bookingConfirmation?.total_price ?? grandTotal}</Text>
+ <Text style={styles.confirmLine}>Total: ${state.bookingConfirmation?.total_price ?? grandTotal}</Text>
  {state.bookingConfirmation?.id && (
   <Text style={styles.confirmLine}>Booking ID: #{state.bookingConfirmation.id} · Status: {state.bookingConfirmation.status}</Text>
  )}
  <Text style={styles.confirmLine}>Availability and messaging ready via alphinium-booking + ChatInstance.</Text>
+
+ {/* Payment status badge */}
+ <View style={[styles.paymentBadge, styles[`paymentBadge_${paymentStatus}`] ?? styles.paymentBadge_unpaid]}>
+  <Text style={styles.paymentBadgeText}>
+   {paymentStatus === 'paid' ? '💳 Paid'
+    : paymentStatus === 'pending' ? '⏳ Payment pending'
+    : paymentStatus === 'refunded' ? '↩️ Refunded'
+    : '💳 Payment due'}
+  </Text>
  </View>
+ </View>
+
+ {/* Deep link return message */}
+ {paymentMessage && (
+  <View style={paymentStatus === 'paid' ? styles.successBox : styles.warningBox}>
+   <Text style={paymentStatus === 'paid' ? styles.successText : styles.warningText}>
+    {paymentMessage}
+   </Text>
+  </View>
+ )}
+
+ {/* Pay Now button — shown when booking is accepted and payment is still due */}
+ {state.bookingConfirmation?.status === 'accepted' && paymentStatus === 'unpaid' && (
+  <>
+   {payError && (
+    <View style={styles.errorBox}>
+     <Text style={styles.errorText}>{payError}</Text>
+    </View>
+   )}
+   <Pressable
+    style={[styles.payButton, paying && styles.buttonDisabled]}
+    onPress={handlePay}
+    disabled={paying}
+   >
+    {paying ? (
+     <ActivityIndicator color={colors.card} />
+    ) : (
+     <Text style={styles.primaryButtonText}>💳 Pay Now — ${state.bookingConfirmation?.total_price ?? grandTotal}</Text>
+    )}
+   </Pressable>
+  </>
+ )}
 
  <View style={styles.callout}>
  <Text style={styles.calloutTitle}> alphinium-payments</Text>
@@ -581,5 +674,56 @@ const styles = StyleSheet.create({
  textAlign: 'center',
  marginBottom: spacing.lg,
  lineHeight: 22,
+ },
+ paymentBadge: {
+ marginTop: spacing.sm,
+ paddingVertical: 5,
+ paddingHorizontal: spacing.sm,
+ borderRadius: radius.sm,
+ alignSelf: 'flex-start',
+ backgroundColor: colors.chip,
+ borderWidth: 1,
+ borderColor: colors.border,
+ },
+ paymentBadge_unpaid: {
+ backgroundColor: '#FEF3C7',
+ borderColor: '#F59E0B',
+ },
+ paymentBadge_pending: {
+ backgroundColor: '#EFF6FF',
+ borderColor: '#3B82F6',
+ },
+ paymentBadge_paid: {
+ backgroundColor: '#D1FAE5',
+ borderColor: '#10B981',
+ },
+ paymentBadge_refunded: {
+ backgroundColor: '#F3F4F6',
+ borderColor: '#9CA3AF',
+ },
+ paymentBadgeText: {
+ fontSize: 13,
+ fontWeight: '700',
+ color: colors.text,
+ },
+ payButton: {
+ backgroundColor: '#10B981',
+ paddingVertical: 14,
+ borderRadius: radius.md,
+ alignItems: 'center',
+ marginBottom: spacing.md,
+ },
+ successBox: {
+ backgroundColor: '#D1FAE5',
+ borderRadius: radius.md,
+ padding: spacing.sm,
+ marginBottom: spacing.md,
+ borderWidth: 1,
+ borderColor: '#10B981',
+ },
+ successText: {
+ color: '#065F46',
+ fontSize: 13,
+ lineHeight: 18,
  },
 });
