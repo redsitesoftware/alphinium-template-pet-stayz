@@ -90,6 +90,8 @@ export async function pay(bookingId, authToken) {
 
   return response.json(); // { checkoutUrl }
 }
+
+/**
  *
  * @param {string|number} bookingId
  * @param {'accepted'|'declined'} status
