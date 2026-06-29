@@ -57,6 +57,24 @@
       "relation": "manyToOne",
       "target": "plugin::users-permissions.user",
       "comment": "Authenticated guest user making the booking"
+    },
+    "payment_status": {
+      "type": "enumeration",
+      "enum": ["unpaid", "pending", "paid", "refunded"],
+      "default": "unpaid",
+      "comment": "Stripe payment lifecycle: unpaid → pending (checkout session created) → paid (webhook confirmed) → refunded"
+    },
+    "stripe_session_id": {
+      "type": "string",
+      "comment": "Stripe Checkout Session ID (cs_…) — set when the guest is redirected to Stripe"
+    },
+    "stripe_checkout_url": {
+      "type": "string",
+      "comment": "Stripe-hosted checkout URL returned by the session creation API — passed back to the guest app"
+    },
+    "stripe_transfer_id": {
+      "type": "string",
+      "comment": "Stripe Transfer ID (tr_…) — set after the host payout is created on payment confirmation"
     }
   }
 }
