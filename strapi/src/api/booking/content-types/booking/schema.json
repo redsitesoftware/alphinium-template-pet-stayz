@@ -49,6 +49,20 @@
       "type": "relation",
       "relation": "manyToOne",
       "target": "plugin::users-permissions.user"
+    },
+    "payment_status": {
+      "type": "enumeration",
+      "enum": ["unpaid", "pending", "paid", "refunded"],
+      "default": "unpaid"
+    },
+    "stripe_session_id": {
+      "type": "string"
+    },
+    "stripe_checkout_url": {
+      "type": "string"
+    },
+    "stripe_transfer_id": {
+      "type": "string"
     }
   }
 }
