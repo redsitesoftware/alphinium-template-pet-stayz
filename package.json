@@ -1,38 +1,63 @@
 {
-  "name": "pet-stayz",
-  "version": "1.0.0",
-  "private": true,
-  "description": "Pet Stayz \u2014 Australian pet accommodation aggregator for boarding, sitting, and daycare hosts",
-  "main": "index.js",
-  "scripts": {
-    "start": "expo start",
-    "android": "expo run:android",
-    "ios": "expo run:ios",
-    "web": "expo start --web",
-    "build": "expo export --platform web && node scripts/inject-ga.js && cp web/auth-popup.html dist/auth-popup.html"
-  },
-  "keywords": [
-    "react-native",
-    "expo",
-    "pets",
-    "boarding",
-    "daycare",
-    "alphinium"
-  ],
-  "author": "Redsitesoftware",
-  "license": "MIT",
-  "dependencies": {
-    "@expo/metro-runtime": "~4.0.1",
-    "expo": "~52.0.0",
-    "react": "18.3.1",
-    "react-dom": "18.3.1",
-    "react-native": "0.76.9",
-    "react-native-web": "~0.19.13",
-    "@react-native-async-storage/async-storage": "1.23.1",
-    "expo-web-browser": "~14.0.2",
-    "expo-location": "~18.0.1"
-  },
-  "devDependencies": {
-    "@babel/core": "^7.25.2"
-  }
+    "name": "pet-stayz",
+    "version": "1.0.0",
+    "private": true,
+    "description": "Pet Stayz — Australian pet accommodation aggregator for boarding, sitting, and daycare hosts",
+    "main": "index.js",
+    "scripts": {
+        "start": "expo start",
+        "android": "expo run:android",
+        "ios": "expo run:ios",
+        "web": "expo start --web",
+        "build": "expo export --platform web && node scripts/inject-ga.js && cp web/auth-popup.html dist/auth-popup.html",
+        "test": "jest --testPathPattern=__tests__"
+    },
+    "keywords": [
+        "react-native",
+        "expo",
+        "pets",
+        "boarding",
+        "daycare",
+        "alphinium"
+    ],
+    "author": "Redsitesoftware",
+    "license": "MIT",
+    "dependencies": {
+        "@expo/metro-runtime": "~4.0.1",
+        "@react-native-async-storage/async-storage": "1.23.1",
+        "expo": "~52.0.0",
+        "expo-location": "~18.0.1",
+        "expo-web-browser": "~14.0.2",
+        "react": "18.3.1",
+        "react-dom": "18.3.1",
+        "react-native": "0.76.9",
+        "react-native-web": "~0.19.13"
+    },
+    "devDependencies": {
+        "@babel/core": "^7.25.2",
+        "@babel/preset-env": "^7.29.7",
+        "babel-jest": "^29.7.0",
+        "jest": "^29.7.0",
+        "jest-environment-jsdom": "^29.7.0",
+        "jest-mock": "^30.4.1"
+    },
+    "jest": {
+        "testEnvironment": "node",
+        "transform": {
+            "^.+\\.[jt]sx?$": [
+                "babel-jest",
+                {}
+            ]
+        },
+        "moduleNameMapper": {
+            "^../config$": "<rootDir>/src/__mocks__/config.js",
+            "^../../config$": "<rootDir>/src/__mocks__/config.js"
+        },
+        "testMatch": [
+            "**/__tests__/**/*.test.js"
+        ],
+        "transformIgnorePatterns": [
+            "node_modules/(?!(expo|@expo|react-native|@react-native|@alphinium)/)"
+        ]
+    }
 }
