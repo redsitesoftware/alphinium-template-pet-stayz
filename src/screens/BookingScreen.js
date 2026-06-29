@@ -1,6 +1,8 @@
-import React from 'react';
-import { Image, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import React, { useCallback, useEffect, useState } from 'react';
+import { ActivityIndicator, Image, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { getHostHomePhoto, getHostProfilePhoto } from '../media';
+import { useAuth } from '../hooks/useAuth';
+import { createBooking, getAvailability } from '../services/BookingService';
 import { useStayz } from '../store/stayzStore';
 import { colors, radius, shadows, spacing, typography } from '../theme';
 import { calculateStayPrice } from '../utils/pricing';
@@ -43,16 +45,106 @@ function BookingInput({ label, value, onChangeText, multiline }) {
 
 export default function BookingScreen() {
  const { state, dispatch } = useStayz();
+ const { session } = useAuth();
+ const authToken = session?.access_token ?? state.authToken;
  const host = state.selectedHost;
 
- if (!host) {
- return null;
+ const [unavailableDates, setUnavailableDates] = useState([]);
+ const [availabilityWarning, setAvailabilityWarning] = useState(null);
+ const [submitting, setSubmitting] = useState(false);
+ const [submitError, setSubmitError] = useState(null);
+
+ // ── Derive ISO date strings from store display strings ─────────────────────
+ // checkIn/checkOut in store are display strings like "Fri 6 June".
+ // We pass them directly to the backend; if they're already YYYY-MM-DD they work as-is.
+ // When the date picker is upgraded to ISO dates this will be seamless.
+ const checkInISO = state.checkIn;
+ const checkOutISO = state.checkOut;
+
+ // ── 1. Load availability on mount and whenever dates change ────────────────
+ const loadAvailability = useCallback(async () => {
+  if (!host?.id) return;
+  // Only attempt if dates look like YYYY-MM-DD
+  if (!checkInISO || !checkOutISO) return;
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(checkInISO) || !/^\d{4}-\d{2}-\d{2}$/.test(checkOutISO)) return;
+
+  try {
+   const result = await getAvailability(host.id, checkInISO, checkOutISO);
+   setUnavailableDates(result.unavailable ?? []);
+   if ((result.unavailable ?? []).length > 0) {
+    setAvailabilityWarning(
+     `⚠️ Some nights are already booked: ${result.unavailable.join(', ')}`
+    );
+   } else {
+    setAvailabilityWarning(null);
+   }
+  } catch {
+   // Availability check is best-effort — don't block the UI if API is unreachable
+   setUnavailableDates([]);
+   setAvailabilityWarning(null);
+  }
+ }, [host?.id, checkInISO, checkOutISO]);
+
+ useEffect(() => {
+  loadAvailability();
+ }, [loadAvailability]);
+
+ // ── Auth guard ─────────────────────────────────────────────────────────────
+ if (!host) return null;
+
+ if (!authToken) {
+  return (
+   <View style={styles.authPrompt}>
+    <Text style={styles.authPromptTitle}>Sign in to book</Text>
+    <Text style={styles.authPromptText}>You need to be logged in to request a booking.</Text>
+    <Pressable style={styles.primaryButton} onPress={() => dispatch({ type: 'LOGOUT' })}>
+     <Text style={styles.primaryButtonText}>Go to login</Text>
+    </Pressable>
+   </View>
+  );
  }
 
  const serviceFee = 10;
  const { total: stayTotal, breakdown } = calculateStayPrice(host, state.checkIn, state.checkOut);
  const grandTotal = stayTotal + serviceFee;
  const hasVariableRates = breakdown.some(d => d.label !== 'Standard');
+
+ // ── 2. Submit booking via BookingService ────────────────────────────────────
+ async function handleConfirmBooking() {
+  setSubmitError(null);
+  setSubmitting(true);
+  try {
+   const petIds = state.bookingData.petId ? [state.bookingData.petId] : [];
+   const created = await createBooking(
+    {
+     check_in: checkInISO,
+     check_out: checkOutISO,
+     pet_ids: petIds,
+     message: [
+      state.bookingData.specialNeeds,
+      state.bookingData.notes,
+     ].filter(Boolean).join('\n') || null,
+     host: host.id,
+     total_price: grandTotal,
+    },
+    authToken
+   );
+
+   const attrs = created?.attributes ?? created ?? {};
+   dispatch({
+    type: 'BOOKING_CONFIRMED',
+    confirmation: {
+     id: created?.id ?? null,
+     status: attrs.status ?? 'pending',
+     total_price: attrs.total_price ?? grandTotal,
+    },
+   });
+  } catch (err) {
+   setSubmitError(err.message ?? 'Something went wrong. Please try again.');
+  } finally {
+   setSubmitting(false);
+  }
+ }
 
  return (
  <ScrollView style={styles.screen} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
@@ -71,6 +163,12 @@ export default function BookingScreen() {
 
  {state.bookingStep === 0 && (
  <View style={styles.card}>
+ {/* Availability warning */}
+ {availabilityWarning && (
+  <View style={styles.warningBox}>
+   <Text style={styles.warningText}>{availabilityWarning}</Text>
+  </View>
+ )}
  {/* Pet selector: shown when user has saved pets */}
  {state.pets && state.pets.length > 0 ? (
   <>
@@ -178,10 +276,23 @@ export default function BookingScreen() {
  <Pressable style={styles.secondaryButton} onPress={() => dispatch({ type: 'PREV_BOOKING_STEP' })}>
  <Text style={styles.secondaryButtonText}>Edit</Text>
  </Pressable>
- <Pressable style={styles.primaryButtonGrow} onPress={() => dispatch({ type: 'NEXT_BOOKING_STEP' })}>
- <Text style={styles.primaryButtonText}>Confirm & Pay ${grandTotal}</Text>
+ <Pressable
+  style={[styles.primaryButtonGrow, submitting && styles.buttonDisabled]}
+  onPress={handleConfirmBooking}
+  disabled={submitting}
+ >
+  {submitting ? (
+   <ActivityIndicator color={colors.card} />
+  ) : (
+   <Text style={styles.primaryButtonText}>Confirm & Pay ${grandTotal}</Text>
+  )}
  </Pressable>
  </View>
+ {submitError && (
+  <View style={styles.errorBox}>
+   <Text style={styles.errorText}>{submitError}</Text>
+  </View>
+ )}
  </View>
  )}
 
@@ -192,7 +303,10 @@ export default function BookingScreen() {
  <Text style={styles.confirmTitle}>{host.name}</Text>
  <Text style={styles.confirmLine}>{state.checkIn} – {state.checkOut} · {state.nights} nights</Text>
  <Text style={styles.confirmLine}>Pet: {state.bookingData.petName || 'Your pet'} ({state.bookingData.breed || 'Breed'})</Text>
- <Text style={styles.confirmLine}>Total paid: ${grandTotal}</Text>
+ <Text style={styles.confirmLine}>Total paid: ${state.bookingConfirmation?.total_price ?? grandTotal}</Text>
+ {state.bookingConfirmation?.id && (
+  <Text style={styles.confirmLine}>Booking ID: #{state.bookingConfirmation.id} · Status: {state.bookingConfirmation.status}</Text>
+ )}
  <Text style={styles.confirmLine}>Availability and messaging ready via alphinium-booking + ChatInstance.</Text>
  </View>
 
@@ -420,5 +534,52 @@ const styles = StyleSheet.create({
  color: colors.textMuted,
  lineHeight: 22,
  marginBottom: 4,
+ },
+ warningBox: {
+ backgroundColor: '#FEF3C7',
+ borderRadius: radius.md,
+ padding: spacing.sm,
+ marginBottom: spacing.md,
+ borderWidth: 1,
+ borderColor: '#F59E0B',
+ },
+ warningText: {
+ color: '#92400E',
+ fontSize: 13,
+ lineHeight: 18,
+ },
+ errorBox: {
+ backgroundColor: '#FEE2E2',
+ borderRadius: radius.md,
+ padding: spacing.sm,
+ marginTop: spacing.sm,
+ borderWidth: 1,
+ borderColor: '#F87171',
+ },
+ errorText: {
+ color: '#991B1B',
+ fontSize: 13,
+ lineHeight: 18,
+ },
+ buttonDisabled: {
+ opacity: 0.6,
+ },
+ authPrompt: {
+ flex: 1,
+ alignItems: 'center',
+ justifyContent: 'center',
+ padding: spacing.lg,
+ backgroundColor: colors.bg,
+ },
+ authPromptTitle: {
+ ...typography.title,
+ color: colors.text,
+ marginBottom: spacing.sm,
+ },
+ authPromptText: {
+ color: colors.textMuted,
+ textAlign: 'center',
+ marginBottom: spacing.lg,
+ lineHeight: 22,
  },
 });
