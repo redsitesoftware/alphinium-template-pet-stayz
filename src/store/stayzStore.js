@@ -251,6 +251,7 @@ const initialState = {
  petSummary: '1 dog · Medium',
  bookingData: { petId: null, petName: '', breed: '', age: '', size: 'Medium', specialNeeds: '', notes: '' },
  bookingStep: 0,
+ bookingConfirmation: null, // { id, status, total_price } — set on successful createBooking()
  pets: [],
  petsLoading: false,
  userLocation: null,
@@ -339,6 +340,8 @@ function reducer(state, action) {
  return { ...state, bookingStep: Math.min(state.bookingStep + 1, 2) };
  case 'PREV_BOOKING_STEP':
  return { ...state, bookingStep: Math.max(state.bookingStep - 1, 0) };
+ case 'BOOKING_CONFIRMED':
+ return { ...state, bookingStep: 2, bookingConfirmation: action.confirmation };
  case 'SET_HOSTS':
  return { ...state, hosts: action.hosts.length > 0 ? action.hosts : HOSTS, hostsLoading: false };
  case 'SET_HOSTS_LOADING':
@@ -352,7 +355,7 @@ function reducer(state, action) {
  case 'SET_USER_LOCATION':
  return { ...state, userLocation: action.location };
  case 'RESET_BOOKING':
- return { ...state, bookingStep: 0, bookingData: initialState.bookingData, phase: 'home', selectedHost: null };
+ return { ...state, bookingStep: 0, bookingData: initialState.bookingData, bookingConfirmation: null, phase: 'home', selectedHost: null };
  case 'LOGOUT':
  return { ...state, phase: 'login', authToken: null, authUser: null, isGuest: false, selectedHost: null, bookingStep: 0 };
  default:

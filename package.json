@@ -30,7 +30,8 @@
     "react-native-web": "~0.19.13",
     "@react-native-async-storage/async-storage": "1.23.1",
     "expo-web-browser": "~14.0.2",
-    "expo-location": "~18.0.1"
+    "expo-location": "~18.0.1",
+    "@alphinium/auth": "file:./packages/alphinium-auth"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2"
