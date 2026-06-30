@@ -267,8 +267,7 @@ function sortHosts(hosts, sortBy) {
 function getFilteredHosts(state) {
  const query = state.searchText.trim().toLowerCase();
 
- return sortHosts(
- state.hosts.filter((host) => {
+ const filtered = state.hosts.filter((host) => {
  if (state.filters.savedOnly && !host.saved) return false;
  if (state.filters.verifiedOnly && !host.verified) return false;
  if (state.filters.type !== 'All' && !host.type.includes(state.filters.type)) return false;
@@ -276,6 +275,8 @@ function getFilteredHosts(state) {
  if (state.filters.priceMax !== 'Any' && host.pricePerNight > Number(state.filters.priceMax)) return false;
  if (!matchesSize(state.filters.size, host)) return false;
  if (!query) return true;
+ return host.name.toLowerCase().includes(query) || host.location.toLowerCase().includes(query);
+ });
 
  if (state.filters.sortBy === 'Distance' && state.userLocation) {
   return sortByDistance(filtered, state.userLocation.lat, state.userLocation.lng);
