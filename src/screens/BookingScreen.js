@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, Image, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { getHostHomePhoto, getHostProfilePhoto } from '../media';
 import { useAuth } from '../hooks/useAuth';
-import { createBooking, getAvailability } from '../services/BookingService';
+import { createBooking, getAvailability, submitReview } from '../services/BookingService';
 import { useStayz } from '../store/stayzStore';
 import { colors, radius, shadows, spacing, typography } from '../theme';
 import { calculateStayPrice } from '../utils/pricing';
@@ -40,6 +40,71 @@ function BookingInput({ label, value, onChangeText, multiline }) {
  style={[styles.input, multiline && styles.textArea]}
  />
  </View>
+ );
+}
+
+function ReviewForm({ bookingId, authToken }) {
+ const [stars, setStars] = useState(0);
+ const [text, setText] = useState('');
+ const [submitting, setSubmitting] = useState(false);
+ const [submitted, setSubmitted] = useState(false);
+ const [error, setError] = useState(null);
+
+ async function handleSubmit() {
+  if (stars < 1) { setError('Please select a star rating.'); return; }
+  if (!text.trim()) { setError('Please write a short review.'); return; }
+  setSubmitting(true);
+  setError(null);
+  try {
+   await submitReview(bookingId, { stars, text: text.trim() }, authToken);
+   setSubmitted(true);
+  } catch (err) {
+   setError(err.message ?? 'Could not submit review. Please try again.');
+  } finally {
+   setSubmitting(false);
+  }
+ }
+
+ if (submitted) {
+  return (
+   <View style={styles.reviewFormCard}>
+    <Text style={styles.reviewFormTitle}>⭐ Thanks for your review!</Text>
+    <Text style={styles.reviewFormSubtitle}>Your feedback helps other pet owners find great hosts.</Text>
+   </View>
+  );
+ }
+
+ return (
+  <View style={styles.reviewFormCard}>
+   <Text style={styles.reviewFormTitle}>Leave a Review</Text>
+   <Text style={styles.reviewFormSubtitle}>How was your pet's stay?</Text>
+   <View style={styles.starsRow}>
+    {[1,2,3,4,5].map((n) => (
+     <Pressable key={n} onPress={() => setStars(n)}>
+      <Text style={[styles.star, n <= stars && styles.starActive]}>{n <= stars ? '★' : '☆'}</Text>
+     </Pressable>
+    ))}
+   </View>
+   <TextInput
+    value={text}
+    onChangeText={setText}
+    placeholder="Tell us about the stay…"
+    placeholderTextColor={colors.textMuted}
+    multiline
+    style={[styles.input, styles.textArea, { marginTop: spacing.sm }]}
+   />
+   {error ? <Text style={styles.errorText}>{error}</Text> : null}
+   <Pressable
+    style={[styles.primaryButton, submitting && styles.buttonDisabled]}
+    onPress={handleSubmit}
+    disabled={submitting}
+   >
+    {submitting
+     ? <ActivityIndicator color={colors.card} />
+     : <Text style={styles.primaryButtonText}>Submit Review</Text>
+    }
+   </Pressable>
+  </View>
  );
 }
 
@@ -310,6 +375,16 @@ export default function BookingScreen() {
  <Text style={styles.confirmLine}>Availability and messaging ready via alphinium-booking + ChatInstance.</Text>
  </View>
 
+ {/* Post-stay review form — shown when booking is accepted, stay completed, not yet reviewed */}
+ {state.bookingConfirmation?.status === 'accepted' &&
+  state.checkOut && new Date(state.checkOut) < new Date() &&
+  !state.bookingConfirmation?.guest_review_submitted && (
+  <ReviewForm
+   bookingId={state.bookingConfirmation.id}
+   authToken={authToken}
+  />
+ )}
+
  <View style={styles.callout}>
  <Text style={styles.calloutTitle}> alphinium-payments</Text>
  <Text style={styles.calloutText}>Real payment collection, host payouts, refund protection, and damage cover. One install.</Text>
@@ -563,6 +638,35 @@ const styles = StyleSheet.create({
  },
  buttonDisabled: {
  opacity: 0.6,
+ },
+ reviewFormCard: {
+ borderWidth: 1,
+ borderColor: colors.border,
+ borderRadius: radius.lg,
+ padding: spacing.md,
+ marginTop: spacing.md,
+ backgroundColor: colors.card,
+ },
+ reviewFormTitle: {
+ ...typography.subtitle,
+ marginBottom: 4,
+ },
+ reviewFormSubtitle: {
+ ...typography.body,
+ color: colors.textMuted,
+ marginBottom: spacing.sm,
+ },
+ starsRow: {
+ flexDirection: 'row',
+ gap: 4,
+ marginBottom: spacing.sm,
+ },
+ star: {
+ fontSize: 28,
+ color: colors.border,
+ },
+ starActive: {
+ color: '#F59E0B',
  },
  authPrompt: {
  flex: 1,

@@ -89,3 +89,22 @@ export async function updateBookingStatus(bookingId, status, authToken) {
   const json = await response.json();
   return json?.data ?? null;
 }
+
+
+/**
+ * Submit a post-stay review for a completed booking.
+ * @param {string} bookingId
+ * @param {{ stars: number, text: string }} review
+ * @param {string} authToken
+ */
+export async function submitReview(bookingId, { stars, text }, authToken) {
+  const res = await fetch(`${STRAPI_URL}/api/bookings/${bookingId}/review`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${authToken}`,
+    },
+    body: JSON.stringify({ data: { stars, text } }),
+  });
+  return res.json();
+}
