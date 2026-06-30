@@ -92,6 +92,54 @@ export async function updateBookingStatus(bookingId, status, authToken) {
 
 
 /**
+ * GET /api/bookings/:id/messages — load messages for a booking thread.
+ *
+ * @param {string|number} bookingId
+ * @param {string} authToken
+ * @returns {Promise<Array<{ id, text, sender: { username }, createdAt }>>}
+ */
+export async function getMessages(bookingId, authToken) {
+  const id = toStrapiId(bookingId);
+  const res = await fetch(`${STRAPI_URL}/api/bookings/${id}/messages`, {
+    headers: { Authorization: `Bearer ${authToken}` },
+  });
+
+  if (!res.ok) {
+    throw new Error(`Failed to load messages: HTTP ${res.status}`);
+  }
+
+  return res.json();
+}
+
+/**
+ * POST /api/bookings/:id/messages — send a message on a booking thread.
+ *
+ * @param {string|number} bookingId
+ * @param {string} text
+ * @param {string} authToken
+ * @returns {Promise<object>} created message
+ */
+export async function sendMessage(bookingId, text, authToken) {
+  const id = toStrapiId(bookingId);
+  const res = await fetch(`${STRAPI_URL}/api/bookings/${id}/messages`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${authToken}`,
+    },
+    body: JSON.stringify({ data: { text } }),
+  });
+
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    const msg = body?.error?.message ?? `Failed to send message: HTTP ${res.status}`;
+    throw new Error(msg);
+  }
+
+  return res.json();
+}
+
+/**
  * Submit a post-stay review for a completed booking.
  * @param {string} bookingId
  * @param {{ stars: number, text: string }} review
