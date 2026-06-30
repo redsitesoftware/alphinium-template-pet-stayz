@@ -1,0 +1,24 @@
+{
+  "kind": "collectionType",
+  "collectionName": "messages",
+  "info": {
+    "singularName": "message",
+    "pluralName": "messages",
+    "displayName": "Message",
+    "description": "Chat message on a booking thread (issue #8)."
+  },
+  "options": { "draftAndPublish": false },
+  "attributes": {
+    "text": { "type": "text", "required": true },
+    "booking": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::booking.booking"
+    },
+    "sender": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "plugin::users-permissions.user"
+    }
+  }
+}
