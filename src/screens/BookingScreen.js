@@ -1,8 +1,8 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Image, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { getHostHomePhoto, getHostProfilePhoto } from '../media';
 import { useAuth } from '../hooks/useAuth';
-import { createBooking, getAvailability, submitReview } from '../services/BookingService';
+import { createBooking, getAvailability, getMessages, sendMessage, submitReview } from '../services/BookingService';
 import { useStayz } from '../store/stayzStore';
 import { colors, radius, shadows, spacing, typography } from '../theme';
 import { calculateStayPrice } from '../utils/pricing';
@@ -40,6 +40,123 @@ function BookingInput({ label, value, onChangeText, multiline }) {
  style={[styles.input, multiline && styles.textArea]}
  />
  </View>
+ );
+}
+
+/**
+ * MessageThread — polling message thread for a booking.
+ * Polls every 10 s. Own messages are right-aligned; other party left-aligned.
+ */
+function MessageThread({ bookingId, authToken, currentUserId }) {
+ const [messages, setMessages] = useState([]);
+ const [msgText, setMsgText] = useState('');
+ const [sending, setSending] = useState(false);
+ const [sendError, setSendError] = useState(null);
+ const scrollRef = useRef(null);
+
+ const loadMessages = useCallback(() => {
+  getMessages(bookingId, authToken)
+   .then((data) => {
+    setMessages(Array.isArray(data) ? data : []);
+   })
+   .catch(() => {}); // silent fail on poll
+ }, [bookingId, authToken]);
+
+ useEffect(() => {
+  loadMessages();
+  const interval = setInterval(loadMessages, 10000);
+  return () => clearInterval(interval);
+ }, [loadMessages]);
+
+ async function handleSend() {
+  const trimmed = msgText.trim();
+  if (!trimmed) return;
+  setSendError(null);
+  setSending(true);
+  try {
+   await sendMessage(bookingId, trimmed, authToken);
+   setMsgText('');
+   loadMessages();
+  } catch (err) {
+   setSendError(err.message ?? 'Could not send message. Please try again.');
+  } finally {
+   setSending(false);
+  }
+ }
+
+ function formatTime(iso) {
+  if (!iso) return '';
+  try {
+   const d = new Date(iso);
+   return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  } catch {
+   return '';
+  }
+ }
+
+ return (
+  <View style={styles.threadContainer}>
+   <Text style={styles.threadTitle}>💬 Messages</Text>
+   {messages.length === 0 ? (
+    <Text style={styles.threadEmpty}>No messages yet. Say hello!</Text>
+   ) : (
+    <ScrollView
+     ref={scrollRef}
+     style={styles.threadScroll}
+     onContentSizeChange={() => scrollRef.current?.scrollToEnd?.({ animated: false })}
+     showsVerticalScrollIndicator={false}
+    >
+     {messages.map((msg) => {
+      const isOwn = msg.sender?.id === currentUserId;
+      return (
+       <View
+        key={msg.id}
+        style={[styles.bubbleRow, isOwn ? styles.bubbleRowOwn : styles.bubbleRowOther]}
+       >
+        <View style={[styles.bubble, isOwn ? styles.bubbleOwn : styles.bubbleOther]}>
+         {!isOwn && (
+          <Text style={styles.bubbleSender}>
+           {msg.sender?.username ?? 'Host'}
+          </Text>
+         )}
+         <Text style={[styles.bubbleText, isOwn && styles.bubbleTextOwn]}>{msg.text}</Text>
+         <Text style={[styles.bubbleTime, isOwn && styles.bubbleTimeOwn]}>
+          {formatTime(msg.createdAt)}
+         </Text>
+        </View>
+       </View>
+      );
+     })}
+    </ScrollView>
+   )}
+
+   {sendError && (
+    <View style={styles.errorBox}>
+     <Text style={styles.errorText}>{sendError}</Text>
+    </View>
+   )}
+
+   <View style={styles.threadInputRow}>
+    <TextInput
+     value={msgText}
+     onChangeText={setMsgText}
+     placeholder="Type a message…"
+     placeholderTextColor={colors.textMuted}
+     style={styles.threadInput}
+     multiline
+    />
+    <Pressable
+     style={[styles.threadSendBtn, (!msgText.trim() || sending) && styles.buttonDisabled]}
+     onPress={handleSend}
+     disabled={!msgText.trim() || sending}
+    >
+     {sending
+      ? <ActivityIndicator color={colors.card} size="small" />
+      : <Text style={styles.threadSendText}>Send</Text>
+     }
+    </Pressable>
+   </View>
+  </View>
  );
 }
 
@@ -385,6 +502,15 @@ export default function BookingScreen() {
   />
  )}
 
+ {/* Messaging thread — visible whenever a booking ID exists */}
+ {state.bookingConfirmation?.id && (
+  <MessageThread
+   bookingId={state.bookingConfirmation.id}
+   authToken={authToken}
+   currentUserId={session?.user?.id ?? null}
+  />
+ )}
+
  <View style={styles.callout}>
  <Text style={styles.calloutTitle}> alphinium-payments</Text>
  <Text style={styles.calloutText}>Real payment collection, host payouts, refund protection, and damage cover. One install.</Text>
@@ -685,5 +811,106 @@ const styles = StyleSheet.create({
  textAlign: 'center',
  marginBottom: spacing.lg,
  lineHeight: 22,
+ },
+ threadContainer: {
+ marginTop: spacing.md,
+ borderTopWidth: 1,
+ borderTopColor: colors.border,
+ paddingTop: spacing.md,
+ },
+ threadTitle: {
+ color: colors.text,
+ fontWeight: '800',
+ fontSize: 16,
+ marginBottom: spacing.sm,
+ },
+ threadEmpty: {
+ color: colors.textMuted,
+ fontSize: 13,
+ textAlign: 'center',
+ paddingVertical: spacing.sm,
+ },
+ threadScroll: {
+ maxHeight: 280,
+ marginBottom: spacing.sm,
+ },
+ bubbleRow: {
+ flexDirection: 'row',
+ marginBottom: spacing.xs,
+ },
+ bubbleRowOwn: {
+ justifyContent: 'flex-end',
+ },
+ bubbleRowOther: {
+ justifyContent: 'flex-start',
+ },
+ bubble: {
+ maxWidth: '78%',
+ borderRadius: radius.md,
+ padding: spacing.sm,
+ },
+ bubbleOwn: {
+ backgroundColor: colors.primary,
+ borderBottomRightRadius: 4,
+ },
+ bubbleOther: {
+ backgroundColor: colors.chip,
+ borderWidth: 1,
+ borderColor: colors.border,
+ borderBottomLeftRadius: 4,
+ },
+ bubbleSender: {
+ fontSize: 11,
+ fontWeight: '700',
+ color: colors.textMuted,
+ marginBottom: 2,
+ },
+ bubbleText: {
+ fontSize: 14,
+ color: colors.text,
+ lineHeight: 20,
+ },
+ bubbleTextOwn: {
+ color: colors.card,
+ },
+ bubbleTime: {
+ fontSize: 10,
+ color: colors.textMuted,
+ marginTop: 2,
+ textAlign: 'right',
+ },
+ bubbleTimeOwn: {
+ color: 'rgba(255,255,255,0.7)',
+ },
+ threadInputRow: {
+ flexDirection: 'row',
+ alignItems: 'flex-end',
+ gap: spacing.xs,
+ marginTop: spacing.xs,
+ },
+ threadInput: {
+ flex: 1,
+ backgroundColor: colors.bg,
+ borderWidth: 1,
+ borderColor: colors.border,
+ borderRadius: radius.md,
+ paddingHorizontal: spacing.sm,
+ paddingVertical: 10,
+ color: colors.text,
+ fontSize: 14,
+ maxHeight: 80,
+ },
+ threadSendBtn: {
+ backgroundColor: colors.primary,
+ paddingHorizontal: spacing.md,
+ paddingVertical: 10,
+ borderRadius: radius.md,
+ alignItems: 'center',
+ justifyContent: 'center',
+ },
+ threadSendText: {
+ color: colors.card,
+ fontWeight: '700',
+ fontSize: 14,
  },
 });
