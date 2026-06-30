@@ -62,15 +62,24 @@ function main() {
   const gaId = readGaIdFromEnv();
   let html = fs.readFileSync(DIST_HTML, 'utf8');
 
-  // Idempotent: skip if already injected
+  // Case 1: Expo copied web/index.html verbatim — %EXPO_PUBLIC_GA_ID% token is present.
+  // Replace the token with the real GA ID (covers both occurrences: src= and gtag('config',...)).
+  if (html.includes('%EXPO_PUBLIC_GA_ID%')) {
+    html = html.split('%EXPO_PUBLIC_GA_ID%').join(gaId);
+    fs.writeFileSync(DIST_HTML, html, 'utf8');
+    console.log(`[inject-ga] ✅ GA4 token substituted in dist/index.html (ID: ${gaId})`);
+    return;
+  }
+
+  // Case 2: The actual GA ID is already present (script was previously injected) — skip.
   if (html.includes('googletagmanager.com')) {
     console.log(`[inject-ga] GA4 already present in dist/index.html — skipping (ID: ${gaId})`);
     return;
   }
 
+  // Case 3: No GA tag at all — inject fresh snippet before </head>.
   const snippet = buildGaSnippet(gaId);
 
-  // Inject before </head>
   if (html.includes('</head>')) {
     html = html.replace('</head>', `${snippet}\n  </head>`);
   } else {
