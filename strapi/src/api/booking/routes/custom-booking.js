@@ -13,14 +13,19 @@ module.exports = {
       method: 'PATCH',
       path: '/bookings/:id',
       handler: 'booking.updateStatus',
-      config: {
-        middlewares: [],
-        policies: [],
-        // Requires authenticated user — enforced inside the controller
-        auth: {
-          scope: ['find'],
-        },
-      },
+      config: { middlewares: [], policies: [], auth: { scope: ['find'] } },
+    },
+    {
+      method: 'POST',
+      path: '/bookings/:id/review',
+      handler: 'booking.submitReview',
+      config: { middlewares: [], policies: [], auth: { scope: ['find'] } },
+    },
+    {
+      method: 'POST',
+      path: '/bookings/:id/pay',
+      handler: 'booking.pay',
+      config: { middlewares: [], policies: [], auth: { scope: ['find'] } },
     },
   ],
 };
